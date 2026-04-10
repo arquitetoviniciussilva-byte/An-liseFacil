@@ -17,15 +17,19 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log("Tentando login para:", email);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
+      console.error("Erro detalhado do Supabase:", error);
       showError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
       setLoading(false);
     } else {
+      console.log("Login bem-sucedido:", data.user?.email);
       navigate("/dashboard");
     }
   };
