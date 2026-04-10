@@ -25,11 +25,14 @@ const Register = () => {
 
     setLoading(true);
     
+    // O perfil será criado automaticamente pelo gatilho 'on_auth_user_created' no Supabase
     const { data, error: authError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
-        data: { full_name: formData.name }
+        data: { 
+          full_name: formData.name 
+        }
       }
     });
 
@@ -40,24 +43,10 @@ const Register = () => {
     }
 
     if (data.user) {
-      // Create profile as pending
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          nome: formData.name,
-          email: formData.email,
-          role: 'analista',
-          status: 'pendente'
-        });
-
-      if (profileError) {
-        showError("Erro ao criar perfil. Contate o suporte.");
-      } else {
-        showSuccess("Solicitação enviada! Aguarde a aprovação do administrador.");
-        navigate("/login");
-      }
+      showSuccess("Solicitação enviada! Aguarde a aprovação do administrador.");
+      navigate("/login");
     }
+    
     setLoading(false);
   };
 
