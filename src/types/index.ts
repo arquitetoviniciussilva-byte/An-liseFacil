@@ -9,6 +9,14 @@ export type AnalysisStatus =
   | 'alvara_emitido' 
   | 'arquivado';
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+}
+
 export interface UserProfile {
   id: string;
   nome: string;
@@ -38,6 +46,23 @@ export interface Analysis {
   created_by: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DashboardSummary {
+  inProgress: number;
+  docPending: number;
+  techPending: number;
+  approved: number;
+  permitsIssued: number;
+}
+
+export interface RecentActivity {
+  id: string;
+  type: 'status_change' | 'new_analysis' | 'new_observation';
+  description: string;
+  user: string;
+  timestamp: string;
+  analysisId: string;
 }
 
 export interface AuthState {
