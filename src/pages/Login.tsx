@@ -1,15 +1,33 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { showError } from "@/utils/toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    setLoading(true);
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      showError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
+      setLoading(false);
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -27,17 +45,33 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail Institucional</Label>
-              <Input id="email" type="email" placeholder="nome@sistema.gov.br" required className="h-11" />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="nome@sistema.gov.br" 
+                required 
+                className="h-11"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Senha</Label>
                 <button type="button" className="text-xs font-medium text-indigo-600 hover:underline">Esqueceu a senha?</button>
               </div>
-              <Input id="password" type="password" placeholder="••••••••" required className="h-11" />
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                required 
+                className="h-11"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button type="submit" className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold">
-              Entrar no Sistema
+            <Button type="submit" disabled={loading} className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold">
+              {loading ? <Loader2 className="animate-spin" /> : "Entrar no Sistema"}
             </Button>
           </form>
 
@@ -50,10 +84,6 @@ const Login = () => {
             </p>
           </div>
         </div>
-        
-        <p className="text-center text-xs text-slate-400 mt-8">
-          © 2024 PRO-ANÁLISE • Sistema de Gestão de Projetos
-        </p>
       </div>
     </div>
   );

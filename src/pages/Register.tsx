@@ -1,17 +1,64 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { showSuccess } from "@/utils/toast";
+import { supabase } from "@/lib/supabase";
+import { showSuccess, showError } from "@/utils/toast";
 
 const Register = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm: ""
+  });
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    showSuccess("Solicitação enviada! Aguarde a aprovação do administrador.");
-    navigate("/login");
+    if (formData.password !== formData.confirm) {
+      return showError("As senhas não coincidem");
+    }
+
+    setLoading(true);
+    
+    const { data, error: authError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: { full_name: formData.name }
+      }
+    });
+
+    if (authError) {
+      showError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (data.user) {
+      // Create profile as pending
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          nome: formData.name,
+          email: formData.email,
+          role: 'analista',
+          status: 'pendente'
+        });
+
+      if (profileError) {
+        showError("Erro ao criar perfil. Contate o suporte.");
+      } else {
+        showSuccess("Solicitação enviada! Aguarde a aprovação do administrador.");
+        navigate("/login");
+      }
+    }
+    setLoading(false);
   };
 
   return (
@@ -33,22 +80,49 @@ const Register = () => {
           <form onSubmit={handleRegister} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="name">Nome Completo</Label>
-              <Input id="name" placeholder="Seu nome completo" required className="h-11" />
+              <Input 
+                id="name" 
+                required 
+                className="h-11"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-mail Institucional</Label>
-              <Input id="email" type="email" placeholder="nome@sistema.gov.br" required className="h-11" />
+              <Input 
+                id="email" 
+                type="email" 
+                required 
+                className="h-11"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" placeholder="Crie uma senha forte" required className="h-11" />
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                className="h-11"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar Senha</Label>
-              <Input id="confirm" type="password" placeholder="Repita a senha" required className="h-11" />
+              <Input 
+                id="confirm" 
+                type="password" 
+                required 
+                className="h-11"
+                value={formData.confirm}
+                onChange={(e) => setFormData({...formData, confirm: e.target.value})}
+              />
             </div>
-            <Button type="submit" className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold mt-2">
-              Enviar Solicitação
+            <Button type="submit" disabled={loading} className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold mt-2">
+              {loading ? <Loader2 className="animate-spin" /> : "Enviar Solicitação"}
             </Button>
           </form>
         </div>

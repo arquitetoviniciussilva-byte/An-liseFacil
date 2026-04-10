@@ -7,20 +7,25 @@ import {
   FileBadge, 
   Settings,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: FileText, label: "Análises", path: "/analises" },
-  { icon: PlusCircle, label: "Nova Análise", path: "/analises/nova" },
-  { icon: CheckCircle2, label: "Aprovados", path: "/aprovados" },
-  { icon: FileBadge, label: "Alvarás", path: "/alvaras" },
-  { icon: Settings, label: "Configurações", path: "/configuracoes" },
-];
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Sidebar = () => {
+  const { profile, signOut } = useAuth();
+
+  const navItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+    { icon: FileText, label: "Análises", path: "/analises" },
+    { icon: PlusCircle, label: "Nova Análise", path: "/analises/nova" },
+    { icon: CheckCircle2, label: "Aprovados", path: "/aprovados" },
+    { icon: FileBadge, label: "Alvarás", path: "/alvaras" },
+    ...(profile?.role === 'admin' ? [{ icon: Users, label: "Usuários", path: "/admin/usuarios" }] : []),
+    { icon: Settings, label: "Configurações", path: "/configuracoes" },
+  ];
+
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
       <div className="p-6 flex items-center gap-3">
@@ -52,7 +57,10 @@ export const Sidebar = () => {
       </nav>
 
       <div className="p-4 border-t border-slate-100">
-        <button className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors">
+        <button 
+          onClick={() => signOut()}
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+        >
           <LogOut size={18} />
           Sair do Sistema
         </button>

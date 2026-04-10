@@ -1,3 +1,6 @@
+export type UserRole = 'admin' | 'analista';
+export type UserStatus = 'pendente' | 'ativo' | 'recusado' | 'inativo';
+
 export type AnalysisStatus = 
   | 'em_andamento' 
   | 'pendencia_documental' 
@@ -6,12 +9,14 @@ export type AnalysisStatus =
   | 'alvara_emitido' 
   | 'arquivado';
 
-export interface User {
+export interface UserProfile {
   id: string;
-  name: string;
+  nome: string;
   email: string;
-  role: 'admin' | 'analista';
-  avatar?: string;
+  role: UserRole;
+  status: UserStatus;
+  avatar_url?: string;
+  created_at: string;
 }
 
 export interface Analysis {
@@ -20,32 +25,23 @@ export interface Analysis {
   protocolNumber: string;
   requester: string;
   technicalResponsible: string;
-  document: string; // CPF/CNPJ
+  document: string;
   requestType: string;
   address: string;
-  realEstateId: string; // Cadastro Imobiliário
+  realEstateId: string;
   zoning: string;
   analystId: string;
   analystName: string;
   status: AnalysisStatus;
   observations?: string;
+  assigned_analyst_id: string;
+  created_by: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface DashboardSummary {
-  inProgress: number;
-  docPending: number;
-  techPending: number;
-  approved: number;
-  permitsIssued: number;
-}
-
-export interface RecentActivity {
-  id: string;
-  type: 'status_change' | 'new_analysis' | 'new_observation';
-  description: string;
-  user: string;
-  timestamp: string;
-  analysisId: string;
+export interface AuthState {
+  profile: UserProfile | null;
+  loading: boolean;
+  isAuthenticated: boolean;
 }

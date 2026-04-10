@@ -5,9 +5,24 @@ import { Button } from "@/components/ui/button";
 import { mockAnalyses } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
+import { AnalysisStatus } from "@/types";
 
-const AnalysisList = () => {
+interface AnalysisListProps {
+  filterStatus?: AnalysisStatus;
+}
+
+const AnalysisList = ({ filterStatus }: AnalysisListProps) => {
+  const { profile } = useAuth();
+
+  const filteredData = filterStatus 
+    ? mockAnalyses.filter(a => a.status === filterStatus)
+    : mockAnalyses;
+
+  const canEdit = (assignedId: string) => {
+    return profile?.role === 'admin' || profile?.id === assignedId;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -45,7 +60,7 @@ const AnalysisList = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {mockAnalyses.map((item) => (
+                {filteredData.map((item) => (
                   <tr key={item.id} className="group hover:bg-slate-50/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900">{item.processNumber}</div>
@@ -67,22 +82,17 @@ const AnalysisList = () => {
                             <Eye size={16} />
                           </Button>
                         </Link>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600">
-                          <Edit2 size={16} />
-                        </Button>
+                        {canEdit(item.assigned_analyst_id) && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600">
+                            <Edit2 size={16} />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-slate-500 text-xs">
-            <p>Mostrando {mockAnalyses.length} de 124 resultados</p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled className="h-8 px-3">Anterior</Button>
-              <Button variant="outline" size="sm" className="h-8 px-3">Próximo</Button>
-            </div>
           </div>
         </CardContent>
       </Card>
