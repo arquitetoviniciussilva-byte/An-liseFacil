@@ -2,14 +2,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, ArrowLeft, Loader2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { ShieldCheck, Loader2 } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { showSuccess, showError } from "@/utils/toast";
 
 const Register = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const { isAuthenticated, loading } = useAuth();
+
+  const [loadingBtn, setLoadingBtn] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,13 +20,21 @@ const Register = () => {
     confirm: ""
   });
 
+  // Se já houver sessão válida, redireciona para a página de origem ou dashboard
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate, location]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirm) {
       return showError("As senhas não coincidem");
     }
 
-    setLoading(true);
+    setLoadingBtn(true);
 
     const { data, error: authError } = await supabase.auth.signUp({
       email: formData.email,
@@ -37,31 +48,50 @@ const Register = () => {
 
     if (authError) {
       showError(authError.message);
-      setLoading(false);
+      setLoadingBtn(false);
       return;
     }
 
     if (data.user) {
-      showSuccess("Solicitação enviada! Aguarde a aprovação do administrador.");
-      navigate("/login");
+      // Cria o perfil do usuário na tabela profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          nome: data.user.user_metadata?.full_name ?? '',
+          email: data.user.email,
+          role: 'analista',
+          status: 'pendente',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        showError('Erro ao criar perfil de usuário');
+      } else {
+        showSuccess('Solicitação enviada! Aguarde a aprovação do administrador.');
+        navigate('/login');
+      }
     }
 
-    setLoading(false);
+    setLoadingBtn(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md">
         <Link to="/login" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 mb-6 transition-colors">
-          <ArrowLeft size={16} /> Voltar para o login
-        </Link>
+          <ArrowLeft size={16} /> Voltar para o login        </Link>
 
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl text-white mb-4 shadow-lg shadow-indigo-200">
             <ShieldCheck size={32} />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Solicitar Acesso</h1>
-          <p className="text-slate-500 mt-2">Preencha os dados para análise da sua conta</p>
+          <p className="text-slate-500 mt-2">
+            Preencha os dados para análise da sua conta
+          </p>
         </div>
 
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
@@ -100,8 +130,7 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar Senha</Label>
-              <Input
-                id="confirm"
+              <Input                id="confirm"
                 type="password"
                 required
                 className="h-11"
@@ -109,8 +138,8 @@ const Register = () => {
                 onChange={(e) => setFormData({...formData, confirm: e.target.value})}
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold mt-2">
-              {loading ? <Loader2 className="animate-spin" /> : "Enviar Solicitação"}
+            <Button type="submit" disabled={loadingBtn} className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold mt-2">
+              {loadingBtn ? <Loader2 className="animate-spin" /> : "Enviar Solicitação"}
             </Button>
           </form>
         </div>
