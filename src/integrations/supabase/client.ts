@@ -9,11 +9,15 @@ if (import.meta.env.DEV) {
   console.log('Supabase Anon Key:', SUPABASE_ANON_KEY ? 'Set' : 'Not set');
 }
 
+let supabase: ReturnType<typeof createClient>;
+
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn('Supabase URL or ANON KEY not found. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables.');
   // Create a dummy client to prevent crashes during development
   // In a real app, you might want to handle this differently
-  export const supabase = createClient('', '');
+  supabase = createClient('', '');
 } else {
-  export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
+
+export { supabase };
