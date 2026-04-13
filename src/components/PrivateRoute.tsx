@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
  * preservando a URL original para possível retorno após o login.
  */
 export const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, profile } = useAuth();
   const location = useLocation();
 
   // Enquanto o estado de carregamento da autenticação está em andamento,
@@ -19,6 +19,11 @@ export const PrivateRoute = ({ children }: { children: JSX.Element }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Usuário autenticado → permite acesso ao conteúdo
+  // Usuário com status pendente → redireciona para aguardando aprovação
+  if (profile?.status === 'pendente') {
+    return <Navigate to="/aguardando-aprovacao" replace />;
+  }
+
+  // Usuário autenticado e com status ativo → permite acesso ao conteúdo
   return children;
 };
