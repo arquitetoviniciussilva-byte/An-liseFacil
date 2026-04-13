@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import WaitingApproval from "./pages/WaitingApproval";
 import UserManagement from "./pages/admin/UserManagement";
 import { PrivateRoute } from "./components/PrivateRoute";
+import { AdminRoute } from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,16 @@ const App = () => (
               <Route path="/aprovados" element={<AnalysisList />} />
               <Route path="/alvaras" element={<AnalysisList />} />
               <Route path="/configuracoes" element={<Settings />} />
+            </Route>
+
+            {/* Rotas de admin – envolvidas por AdminRoute */}
+            <Route
+              element={
+                <AdminRoute>
+                  <DashboardLayout />
+                </AdminRoute>
+              }
+            >
               <Route path="/admin/usuarios" element={<UserManagement />} />
             </Route>
 

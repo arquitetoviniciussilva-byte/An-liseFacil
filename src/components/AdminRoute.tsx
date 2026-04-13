@@ -1,12 +1,12 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdmin } from "@/lib/permissions";
 
 /**
- * Envolve rotas que requerem autenticação.
- * Redireciona usuários não autenticados para login,
- * usuários pendentes para página de aguardando aprovação.
+ * Envolve rotas que só podem ser acessadas por administradores.
+ * Usuários não admin são redirecionados para o dashboard.
  */
-export const PrivateRoute = ({ children }: { children: JSX.Element }) => {
+export const AdminRoute = ({ children }: { children: JSX.Element }) => {
   const { isAuthenticated, loading, profile } = useAuth();
   const location = useLocation();
 
@@ -18,6 +18,11 @@ export const PrivateRoute = ({ children }: { children: JSX.Element }) => {
 
   if (profile?.status === "pendente") {
     return <Navigate to="/aguardando-aprovacao" replace />;
+  }
+
+  if (!isAdmin(profile)) {
+    // Usuário autenticado, mas não admin → volta ao dashboard
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

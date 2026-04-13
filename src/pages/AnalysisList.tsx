@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AnalysisStatus } from "@/types";
+import { canEditAnalysis } from "@/lib/permissions";
 
 interface AnalysisListProps {
   filterStatus?: AnalysisStatus;
@@ -15,21 +16,17 @@ interface AnalysisListProps {
 const AnalysisList = ({ filterStatus }: AnalysisListProps) => {
   const { profile } = useAuth();
 
-  const filteredData = filterStatus 
-    ? mockAnalyses.filter(a => a.status === filterStatus)
+  const filteredData = filterStatus
+    ? mockAnalyses.filter((a) => a.status === filterStatus)
     : mockAnalyses;
-
-  const canEdit = (assignedId: string) => {
-    return profile?.role === 'admin' || profile?.id === assignedId;
-  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <Input 
-            placeholder="Buscar por processo, requerente ou documento..." 
+          <Input
+            placeholder="Buscar por processo, requerente ou documento..."
             className="pl-10 bg-white border-slate-200"
           />
         </div>
@@ -37,11 +34,13 @@ const AnalysisList = ({ filterStatus }: AnalysisListProps) => {
           <Button variant="outline" className="gap-2 border-slate-200">
             <Filter size={18} /> Filtros
           </Button>
-          <Link to="/analises/nova">
-            <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700">
-              <Plus size={18} /> Nova Análise
-            </Button>
-          </Link>
+          {profile?.role === "analista" && (
+            <Link to="/analises/nova">
+              <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                <Plus size={18} /> Nova Análise
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -82,7 +81,7 @@ const AnalysisList = ({ filterStatus }: AnalysisListProps) => {
                             <Eye size={16} />
                           </Button>
                         </Link>
-                        {canEdit(item.assigned_analyst_id) && (
+                        {canEditAnalysis(profile, item.assigned_analyst_id) && (
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600">
                             <Edit2 size={16} />
                           </Button>
