@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { authService } from "@/services/auth.service";
+import { supabase } from "@/lib/supabase";
 import { showError } from "@/utils/toast";
 
 const Login = () => {
@@ -16,14 +16,21 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    console.log("Tentando login para:", email);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    try {
-      await authService.signIn(email, password);
-      navigate("/dashboard");
-    } catch (error) {
-      showError(error instanceof Error ? error.message : 'Erro ao fazer login');
-    } finally {
+    if (error) {
+      console.error("Erro detalhado do Supabase:", error);
+      showError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
       setLoading(false);
+    } else {
+      console.log("Login bem-sucedido:", data.user?.email);
+      navigate("/dashboard");
     }
   };
 

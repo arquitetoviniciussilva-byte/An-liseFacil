@@ -1,3 +1,3 @@
-import { supabase } from '@/integrations/supabase';
+import { supabase as officialClient } from "@/integrations/supabase/client";
 
-export { supabase };
+export const supabase = officialClient;
