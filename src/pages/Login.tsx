@@ -1,35 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, Loader2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { showError } from "@/utils/toast";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const { isAuthenticated, loading } = useAuth();
+
+  const [loadingBtn, setLoadingBtn] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Se já houver sessão válida, redireciona para a página de origem ou dashboard
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate, location]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingBtn(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
       console.error("Erro detalhado do Supabase:", error);
-      showError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
-      setLoading(false);
+      showError(
+        error.message === "Invalid login credentials"
+          ? "E-mail ou senha incorretos"
+          : error.message,
+      );
+      setLoadingBtn(false);
     } else {
-      navigate("/dashboard");
+      // A mudança de sessão será capturada pelo AuthContext,
+      // que já redirecionará o usuário via useEffect acima.
     }
   };
 
@@ -41,7 +56,9 @@ const Login = () => {
             <ShieldCheck size={32} />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Bem-vindo de volta</h1>
-          <p className="text-slate-500 mt-2">Acesse sua conta para gerenciar as análises</p>
+          <p className="text-slate-500 mt-2">
+            Acesse sua conta para gerenciar as análises
+          </p>
         </div>
 
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
@@ -61,7 +78,12 @@ const Login = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Senha</Label>
-                <button type="button" className="text-xs font-medium text-indigo-600 hover:underline">Esqueceu a senha?</button>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-indigo-600 hover:underline"
+                >
+                  Esqueceu a senha?
+                </button>
               </div>
               <Input
                 id="password"
@@ -73,15 +95,22 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold">
-              {loading ? <Loader2 className="animate-spin" /> : "Entrar no Sistema"}
+            <Button
+              type="submit"
+              disabled={loadingBtn}
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold"
+            >
+              {loadingBtn ? <Loader2 className="animate-spin" /> : "Entrar no Sistema"}
             </Button>
           </form>
 
           <div className="mt-8 pt-6 border-t border-slate-100 text-center">
             <p className="text-sm text-slate-500">
               Não tem uma conta?{" "}
-              <Link to="/cadastro" className="font-semibold text-indigo-600 hover:underline">
+              <Link
+                to="/cadastro"
+                className="font-semibold text-indigo-600 hover:underline"
+              >
                 Solicitar acesso
               </Link>
             </p>
