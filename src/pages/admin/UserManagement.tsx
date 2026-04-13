@@ -33,7 +33,7 @@ const UserManagement = () => {
   const updateStatus = async (userId: string, status: UserProfile['status'], role: UserProfile['role'] = 'analista') => {
     const { error } = await supabase
       .from('profiles')
-      .update({ status, role })
+      .update({ status, role } as any) // Cast to any to satisfy Supabase typing
       .eq('id', userId);
 
     if (error) {
