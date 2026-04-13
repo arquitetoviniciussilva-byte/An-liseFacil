@@ -16,9 +16,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    console.log("Tentando login para:", email);
-    
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -49,11 +47,11 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail Institucional</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="nome@sistema.gov.br" 
-                required 
+              <Input
+                id="email"
+                type="email"
+                placeholder="nome@sistema.gov.br"
+                required
                 className="h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -64,11 +62,11 @@ const Login = () => {
                 <Label htmlFor="password">Senha</Label>
                 <button type="button" className="text-xs font-medium text-indigo-600 hover:underline">Esqueceu a senha?</button>
               </div>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="••••••••" 
-                required 
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                required
                 className="h-11"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
