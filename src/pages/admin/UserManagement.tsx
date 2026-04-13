@@ -33,7 +33,8 @@ const UserManagement = () => {
   const updateStatus = async (userId: string, status: UserProfile['status'], role: UserProfile['role'] = 'analista') => {
     const { error } = await supabase
       .from('profiles')
-      .update({ status, role })
+      // Cast payload to any to satisfy Supabase's generic typing
+      .update({ status, role } as any)
       .eq('id', userId);
 
     if (error) {
@@ -72,7 +73,7 @@ const UserManagement = () => {
                     <td className="px-6 py-4 capitalize">{user.role}</td>
                     <td className="px-6 py-4">
                       <Badge variant={
-                        user.status === 'ativo' ? 'default' : 
+                        user.status === 'ativo' ? 'default' :
                         user.status === 'pendente' ? 'outline' : 'destructive'
                       } className={user.status === 'ativo' ? 'bg-emerald-500' : ''}>
                         {user.status}
@@ -82,16 +83,16 @@ const UserManagement = () => {
                       <div className="flex items-center justify-end gap-2">
                         {user.status === 'pendente' && (
                           <>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               className="h-8 bg-emerald-600 hover:bg-emerald-700 gap-1"
                               onClick={() => updateStatus(user.id, 'ativo')}
                             >
                               <Check size={14} /> Aprovar
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="h-8 text-red-600 border-red-200 hover:bg-red-50 gap-1"
                               onClick={() => updateStatus(user.id, 'recusado')}
                             >
@@ -100,9 +101,9 @@ const UserManagement = () => {
                           </>
                         )}
                         {user.status === 'ativo' && user.role !== 'admin' && (
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="h-8 text-slate-400 hover:text-red-600 gap-1"
                             onClick={() => updateStatus(user.id, 'inativo')}
                           >
