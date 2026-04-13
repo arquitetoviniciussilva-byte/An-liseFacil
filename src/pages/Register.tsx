@@ -37,6 +37,7 @@ const Register = () => {
 
     setLoadingBtn(true);
 
+    // O Perfil é criado automaticamente via Trigger no banco de dados (handle_new_user)
     const { data, error: authError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
@@ -54,26 +55,8 @@ const Register = () => {
     }
 
     if (data.user) {
-      // Cria o perfil do usuário na tabela profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          nome: data.user.user_metadata?.full_name ?? '',
-          email: data.user.email,
-          role: 'analista',
-          status: 'pendente',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        showError('Erro ao criar perfil de usuário');
-      } else {
-        showSuccess('Solicitação enviada! Aguarde a aprovação do administrador.');
-        navigate('/login');
-      }
+      showSuccess('Solicitação enviada! Verifique seu e-mail para confirmar o cadastro.');
+      navigate('/login');
     }
 
     setLoadingBtn(false);
