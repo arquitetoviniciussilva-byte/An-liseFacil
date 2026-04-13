@@ -62,6 +62,7 @@ const UserManagement = () => {
                   <th className="px-6 py-4 font-medium">E-mail</th>
                   <th className="px-6 py-4 font-medium">Perfil</th>
                   <th className="px-6 py-4 font-medium">Status</th>
+                  <th className="px-6 py-4 font-medium">Data Criação</th>
                   <th className="px-6 py-4 font-medium text-right">Ações</th>
                 </tr>
               </thead>
@@ -78,6 +79,9 @@ const UserManagement = () => {
                       } className={user.status === 'ativo' ? 'bg-emerald-500' : ''}>
                         {user.status}
                       </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-slate-500">
+                      {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
