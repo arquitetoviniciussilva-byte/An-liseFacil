@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, ArrowLeft, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { authService } from "@/services/auth.service";
 import { showSuccess, showError } from "@/utils/toast";
 
 const Register = () => {
@@ -24,30 +24,18 @@ const Register = () => {
     }
 
     setLoading(true);
-    
-    // O perfil será criado automaticamente pelo gatilho 'on_auth_user_created' no Supabase
-    const { data, error: authError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: { 
-          full_name: formData.name 
-        }
-      }
-    });
 
-    if (authError) {
-      showError(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    if (data.user) {
+    try {
+      await authService.signUp(formData.email, formData.password, {
+        data: { full_name: formData.name }
+      });
       showSuccess("Solicitação enviada! Aguarde a aprovação do administrador.");
       navigate("/login");
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Erro ao fazer cadastro');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -96,7 +84,7 @@ const Register = () => {
                 required 
                 className="h-11"
                 value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({...formData, password: formData.password})}
               />
             </div>
             <div className="space-y-2">
