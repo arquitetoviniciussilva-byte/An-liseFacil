@@ -1,3 +1,3 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = supabase;
+export { supabase };
