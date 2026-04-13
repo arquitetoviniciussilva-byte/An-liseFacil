@@ -17,7 +17,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: false,
   });
 
-  // Update isAuthenticated as soon as we have a session
   useEffect(() => {
     const processSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -28,7 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
 
       if (session?.user) {
-        // Fetch profile for the authenticated user
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -48,7 +46,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     processSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       processSession();
     });

@@ -24,14 +24,13 @@ const Register = () => {
     }
 
     setLoading(true);
-    
-    // O perfil será criado automaticamente pelo gatilho 'on_auth_user_created' no Supabase
+
     const { data, error: authError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
-        data: { 
-          full_name: formData.name 
+        data: {
+          full_name: formData.name
         }
       }
     });
@@ -46,7 +45,7 @@ const Register = () => {
       showSuccess("Solicitação enviada! Aguarde a aprovação do administrador.");
       navigate("/login");
     }
-    
+
     setLoading(false);
   };
 
@@ -69,9 +68,9 @@ const Register = () => {
           <form onSubmit={handleRegister} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="name">Nome Completo</Label>
-              <Input 
-                id="name" 
-                required 
+              <Input
+                id="name"
+                required
                 className="h-11"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -79,10 +78,10 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-mail Institucional</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                required 
+              <Input
+                id="email"
+                type="email"
+                required
                 className="h-11"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -90,10 +89,10 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
+              <Input
+                id="password"
+                type="password"
+                required
                 className="h-11"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -101,10 +100,10 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar Senha</Label>
-              <Input 
-                id="confirm" 
-                type="password" 
-                required 
+              <Input
+                id="confirm"
+                type="password"
+                required
                 className="h-11"
                 value={formData.confirm}
                 onChange={(e) => setFormData({...formData, confirm: e.target.value})}

@@ -1,12 +1,12 @@
 export type UserRole = 'admin' | 'analista';
 export type UserStatus = 'pendente' | 'ativo' | 'recusado' | 'inativo';
 
-export type AnalysisStatus = 
-  | 'em_andamento' 
-  | 'pendencia_documental' 
-  | 'pendencia_tecnica' 
-  | 'aprovado' 
-  | 'alvara_emitido' 
+export type AnalysisStatus =
+  | 'em_andamento'
+  | 'pendencia_documental'
+  | 'pendencia_tecnica'
+  | 'aprovado'
+  | 'alvara_emitido'
   | 'arquivado';
 
 export interface User {

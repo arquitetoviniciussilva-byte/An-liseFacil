@@ -29,11 +29,7 @@ const Login = () => {
       showError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
       setLoading(false);
     } else {
-      // Force immediate state update by checking session again
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        navigate("/dashboard");
-      }
+      navigate("/dashboard");
     }
   };
 
