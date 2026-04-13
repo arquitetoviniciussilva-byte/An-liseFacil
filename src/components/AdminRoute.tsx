@@ -1,3 +1,4 @@
+import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { isAdmin } from "@/lib/permissions";
@@ -6,7 +7,7 @@ import { isAdmin } from "@/lib/permissions";
  * Envolve rotas que só podem ser acessadas por administradores.
  * Usuários não admin são redirecionados para o dashboard.
  */
-export const AdminRoute = ({ children }: { children: JSX.Element }) => {
+export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading, profile } = useAuth();
   const location = useLocation();
 
@@ -25,5 +26,5 @@ export const AdminRoute = ({ children }: { children: JSX.Element }) => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };

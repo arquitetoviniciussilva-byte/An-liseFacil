@@ -1,3 +1,4 @@
+import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -6,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
  * Redireciona usuários não autenticados para login,
  * usuários pendentes para página de aguardando aprovação.
  */
-export const PrivateRoute = ({ children }: { children: JSX.Element }) => {
+export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading, profile } = useAuth();
   const location = useLocation();
 
@@ -20,5 +21,5 @@ export const PrivateRoute = ({ children }: { children: JSX.Element }) => {
     return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };

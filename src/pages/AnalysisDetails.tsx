@@ -11,15 +11,21 @@ import {
   History, 
   AlertCircle,
   Download,
-  Printer
+  Printer,
+  Edit2
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAuth } from "@/contexts/AuthContext";
+import { canEditAnalysis } from "@/lib/permissions";
 
 const AnalysisDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const analysis = mockAnalyses.find(a => a.id === id) || mockAnalyses[0];
+
+  const canEdit = canEditAnalysis(profile, analysis.assigned_analyst_id);
 
   return (
     <div className="space-y-6">
@@ -40,7 +46,12 @@ const AnalysisDetails = () => {
           <Button variant="outline" className="gap-2 border-slate-200">
             <Printer size={18} /> Imprimir
           </Button>
-          <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+          {canEdit && (
+            <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+              <Edit2 size={18} /> Editar Análise
+            </Button>
+          )}
+          <Button variant="secondary" className="gap-2">
             <Download size={18} /> Exportar PDF
           </Button>
         </div>
@@ -157,9 +168,11 @@ const AnalysisDetails = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-amber-700 italic">Nenhuma pendência ativa registrada.</p>
-              <Button variant="outline" className="w-full mt-4 border-amber-200 text-amber-700 hover:bg-amber-100">
-                Registrar Pendência
-              </Button>
+              {canEdit && (
+                <Button variant="outline" className="w-full mt-4 border-amber-200 text-amber-700 hover:bg-amber-100">
+                  Registrar Pendência
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

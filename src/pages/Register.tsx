@@ -1,10 +1,11 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { showSuccess, showError } from "@/utils/toast";
 
 const Register = () => {
@@ -82,7 +83,8 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md">
         <Link to="/login" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 mb-6 transition-colors">
-          <ArrowLeft size={16} /> Voltar para o login        </Link>
+          <ArrowLeft size={16} /> Voltar para o login
+        </Link>
 
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl text-white mb-4 shadow-lg shadow-indigo-200">
@@ -130,7 +132,8 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar Senha</Label>
-              <Input                id="confirm"
+              <Input
+                id="confirm"
                 type="password"
                 required
                 className="h-11"
