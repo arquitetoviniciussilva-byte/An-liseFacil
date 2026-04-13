@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { showError } from "@/utils/toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,8 +29,11 @@ const Login = () => {
       showError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : error.message);
       setLoading(false);
     } else {
-      console.log("Login bem-sucedido:", data.user?.email);
-      navigate("/dashboard");
+      // Force immediate state update by checking session again
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        navigate("/dashboard");
+      }
     }
   };
 

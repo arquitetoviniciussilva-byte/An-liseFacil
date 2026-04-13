@@ -17,6 +17,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: false,
   });
 
+  // Update isAuthenticated as soon as we have a session
+  useEffect(() => {
+    const processSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        isAuthenticated: !!session?.user,
+      }));
+
+      if (session?.user) {
+        // Fetch profile for the authenticated user
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!error) {
+          setState(prev => ({
+            ...prev,
+            profile: data as UserProfile,
+          }));
+        } else {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+
+    processSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      processSession();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const fetchProfile = async (user: User) => {
     try {
       const { data, error } = await supabase
@@ -26,39 +65,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) throw error;
-
-      setState({
+      setState(prev => ({
+        ...prev,
         profile: data as UserProfile,
-        loading: false,
-        isAuthenticated: true,
-      });
+      }));
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setState(prev => ({ ...prev, loading: false }));
     }
   };
-
-  useEffect(() => {
-    // Check active sessions
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchProfile(session.user);
-      } else {
-        setState({ profile: null, loading: false, isAuthenticated: false });
-      }
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        fetchProfile(session.user);
-      } else {
-        setState({ profile: null, loading: false, isAuthenticated: false });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
