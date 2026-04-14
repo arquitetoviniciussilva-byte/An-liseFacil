@@ -1,11 +1,11 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import supabase from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { ShieldCheck } from "lucide-react";
+import { showError, showSuccess } from "@/utils/toast";
 import { Input } from "@/components/ui/input";
-import { Label } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "@/components/ui/loader";
+import { ArrowLeft } from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    confirm: ""
+    confirm: "",
   });
 
   useEffect(() => {
@@ -53,8 +53,8 @@ const Register = () => {
     }
 
     if (data.user) {
-      showSuccess('Solicitação enviada! Verifique seu e-mail para confirmar o cadastro.');
-      navigate('/login');
+      showSuccess("Solicitação enviada! Verifique seu e‑mail para confirmar o cadastro.");
+      navigate("/login");
     }
 
     setLoadingBtn(false);
@@ -64,22 +64,21 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md">
         <Link to="/login" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 mb-6 transition-colors">
-          <ArrowLeft size={16} /> Voltar para o login        </Link>
+          <ArrowLeft size={16} /> Voltar para o login
+        </Link>
 
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl text-white mb-4 shadow-lg shadow-indigo-200">
-            <ShieldCheck size={32} />
+            <ArrowLeft size={32} />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Solicitar Acesso</h1>
-          <p className="text-slate-500 mt-2">
-            Preencha os dados para análise da sua conta
-          </p>
+          <p className="text-slate-500 mt-2">Preencha os dados para análise da sua conta</p>
         </div>
 
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
           <form onSubmit={handleRegister} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
+              <label htmlFor="name" className="text-sm font-medium text-slate-900">Nome Completo</label>
               <Input
                 id="name"
                 required
@@ -89,7 +88,7 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail Institucional</Label>
+              <label htmlFor="email" className="text-sm font-medium text-slate-900">E‑mail Institucional</label>
               <Input
                 id="email"
                 type="email"
@@ -100,7 +99,7 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <label htmlFor="password" className="text-sm font-medium text-slate-900">Senha</label>
               <Input
                 id="password"
                 type="password"
@@ -111,7 +110,7 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm">Confirmar Senha</Label>
+              <label htmlFor="confirm" className="text-sm font-medium text-slate-900">Confirmar Senha</label>
               <Input
                 id="confirm"
                 type="password"
