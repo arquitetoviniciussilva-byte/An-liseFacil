@@ -13,48 +13,24 @@ interface AuthContextProps {
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AuthContextProps>({
-    profile: null,
-    loading: true,
-    isAuthenticated: false,
-    signOut: async () => await supabase.auth.signOut(),
-    refreshProfile: async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        await fetchProfile(data.user);
-      }
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Sign‑out helper – returns void
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Refresh profile helper
+  const refreshProfile = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data?.user) {
+      await fetchProfile(data.user);
     }
-  });
+  };
 
-  useEffect(() => {
-    const processSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        isAuthenticated: !!session?.user,
-      }));
-
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        if (!error) {
-          setState(prev => ({ ...prev, profile: data as UserProfile }));
-        }
-      }
-    };
-
-    processSession();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => processSession(),
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
+  // Fetch profile from Supabase
   const fetchProfile = async (user: any) => {
     try {
       const { data, error } = await supabase
@@ -63,24 +39,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', user.id)
         .single();
       if (!error) {
-        setState(prev => ({ ...prev, profile: data as UserProfile }));
+        setProfile(data as UserProfile);
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+    } catch (e) {
+      console.error('Error fetching profile:', e);
     }
   };
 
+  // Initialise session on mount and listen for changes
+  useEffect(() => {
+    const processSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setLoading(false);
+      setIsAuthenticated(!!session?.user);
+
+      if (session?.user) {
+        await fetchProfile(session.user);
+      }
+    };
+
+    processSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      () => processSession(),
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
-    <AuthContext.Provider value={state}>
+    <AuthContext.Provider
+      value={{
+        profile,
+        loading,
+        isAuthenticated,
+        signOut,
+        refreshProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
+  const ctx = useContext(AuthContext);
+  if (ctx === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context;
+  return ctx;
 };

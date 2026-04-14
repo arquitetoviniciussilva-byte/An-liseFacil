@@ -14,7 +14,10 @@ const UserManagement = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) {
         showError("Erro ao carregar usuários");
       } else {
@@ -27,14 +30,21 @@ const UserManagement = () => {
   const updateStatus = async (userId: string, newStatus: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .eq('id', userId);
       if (error) {
         showError("Erro ao atualizar status do usuário");
       } else {
         showSuccess(`Status do usuário atualizado para ${newStatus}`);
-        setUsers((prev) => prev.map(user => user.id === userId ? { ...user, status: newStatus as any } : user));
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, status: newStatus as any } : user,
+          ),
+        );
       }
-    } catch (error) {
+    } catch (e) {
       showError("Erro ao atualizar status do usuário");
     } finally {
       setLoading(false);
@@ -43,10 +53,7 @@ const UserManagement = () => {
 
   const handleApprove = async (userId: string) => {
     await updateStatus(userId, 'ativo');
-    const { data, error } = await supabase.auth.getUser();
-    if (!error && data) {
-      await supabase.auth.setSession(data.session);
-    }
+    // No session handling needed here
   };
 
   const handleReject = async (userId: string) => {
@@ -61,7 +68,7 @@ const UserManagement = () => {
           Sair
         </Button>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
           <thead>
@@ -81,7 +88,10 @@ const UserManagement = () => {
                 <td className="px-6 py-4 text-slate-600">{user.email}</td>
                 <td className="px-6 py-4 text-slate-600">{user.role}</td>
                 <td className="px-6 py-4">
-                  <Badge variant={user.status === 'ativo' ? 'default' : user.status === 'pendente' ? 'outline' : 'destructive'} className={user.status === 'ativo' ? 'bg-emerald-500' : ''}>
+                  <Badge
+                    variant={user.status === 'ativo' ? 'default' : user.status === 'pendente' ? 'outline' : 'destructive'}
+                    className={user.status === 'ativo' ? 'bg-emerald-500' : ''}
+                  >
                     {user.status}
                   </Badge>
                 </td>
@@ -92,10 +102,19 @@ const UserManagement = () => {
                   <div className="flex items-center justify-end gap-2">
                     {user.status === 'pendente' && (
                       <div className="flex items-center gap-1">
-                        <Button size="sm" className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => handleApprove(user.id)}>
+                        <Button
+                          size="sm"
+                          className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white"
+                          onClick={() => handleApprove(user.id)}
+                        >
                           <Check size={14} /> Aprovar
                         </Button>
-                        <Button size="sm" variant="outline" className="h-8 text-red-600 border-red-200 hover:bg-red-50 gap-1" onClick={() => handleReject(user.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-red-600 border-red-200 hover:bg-red-50 gap-1"
+                          onClick={() => handleReject(user.id)}
+                        >
                           <X size={14} /> Recusar
                         </Button>
                       </div>

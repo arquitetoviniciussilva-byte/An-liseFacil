@@ -5,6 +5,7 @@ import { showError } from "@/utils/toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ const Login = () => {
       );
       setLoadingBtn(false);
     } else {
-      // A mudança de sessão será capturada pelo AuthContext
+      // session change handled by AuthContext
     }
   };
 
