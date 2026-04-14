@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 import supabase from "@/lib/supabase";
 import { UserProfile } from "@/types";
 
@@ -12,58 +12,105 @@ interface AuthContextProps {
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Sign‑out helper – returns void
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  // Refresh profile helper
-  const refreshProfile = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data?.user) {
-      await fetchProfile(data.user);
-    }
-  };
-
-  // Fetch profile from Supabase
-  const fetchProfile = async (user: any) => {
+  const fetchProfile = async (user: { id: string }) => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single();
-      if (!error) {
-        setProfile(data as UserProfile);
+
+      if (error) {
+        setProfile(null);
+        return;
       }
-    } catch (e) {
-      console.error('Error fetching profile:', e);
+
+      setProfile(data as UserProfile);
+    } catch (error) {
+      console.error("Erro ao buscar perfil:", error);
+      setProfile(null);
     }
   };
 
-  // Initialise session on mount and listen for changes
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    } finally {
+      setProfile(null);
+      setIsAuthenticated(false);
+      setLoading(false);
+    }
+  };
+
+  const refreshProfile = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      setProfile(null);
+      setIsAuthenticated(false);
+      return;
+    }
+
+    await fetchProfile(user);
+  };
+
   useEffect(() => {
     const processSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setLoading(false);
-      setIsAuthenticated(!!session?.user);
+      try {
+        setLoading(true);
 
-      if (session?.user) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+          setIsAuthenticated(false);
+          setProfile(null);
+          return;
+        }
+
+        setIsAuthenticated(true);
         await fetchProfile(session.user);
+      } catch (error) {
+        console.error("Erro ao processar sessão:", error);
+        setIsAuthenticated(false);
+        setProfile(null);
+      } finally {
+        setLoading(false);
       }
     };
 
     processSession();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      () => processSession(),
-    );
 
-    return () => subscription.unsubscribe();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        setProfile(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
+      fetchProfile(session.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
@@ -83,8 +130,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
+
   if (ctx === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return ctx;
 };
