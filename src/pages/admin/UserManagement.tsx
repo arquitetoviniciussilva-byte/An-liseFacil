@@ -32,7 +32,7 @@ const UserManagement = () => {
         showError("Erro ao atualizar status do usuário");
       } else {
         showSuccess(`Status do usuário atualizado para ${newStatus}`);
-        setUsers((prev) => prev.map(user => user.id === userId ? { ...user, status: newStatus } : user));
+        setUsers((prev) => prev.map(user => user.id === userId ? { ...user, status: newStatus as any } : user));
       }
     } catch (error) {
       showError("Erro ao atualizar status do usuário");
