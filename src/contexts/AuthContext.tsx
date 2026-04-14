@@ -6,6 +6,7 @@ interface AuthContextProps {
   profile: UserProfile | null;
   loading: boolean;
   isAuthenticated: boolean;
+  profileLoaded: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -17,17 +18,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const fetchProfile = async (user: { id: string }) => {
     try {
+      setProfileLoaded(false);
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
 
-      if (error) {
+      if (error || !data) {
         setProfile(null);
         return;
       }
@@ -36,17 +40,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
       setProfile(null);
+    } finally {
+      setProfileLoaded(true);
     }
   };
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Erro ao sair:", error);
     } finally {
       setProfile(null);
       setIsAuthenticated(false);
+      setProfileLoaded(true);
       setLoading(false);
     }
   };
@@ -60,9 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (error || !user) {
       setProfile(null);
       setIsAuthenticated(false);
+      setProfileLoaded(true);
       return;
     }
 
+    setIsAuthenticated(true);
     await fetchProfile(user);
   };
 
@@ -70,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const processSession = async () => {
       try {
         setLoading(true);
+        setProfileLoaded(false);
 
         const {
           data: { session },
@@ -78,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!session?.user) {
           setIsAuthenticated(false);
           setProfile(null);
+          setProfileLoaded(true);
           return;
         }
 
@@ -87,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("Erro ao processar sessão:", error);
         setIsAuthenticated(false);
         setProfile(null);
+        setProfileLoaded(true);
       } finally {
         setLoading(false);
       }
@@ -96,16 +106,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
         setProfile(null);
         setIsAuthenticated(false);
+        setProfileLoaded(true);
         setLoading(false);
         return;
       }
 
       setIsAuthenticated(true);
-      fetchProfile(session.user);
+      await fetchProfile(session.user);
+      setLoading(false);
     });
 
     return () => {
@@ -119,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         profile,
         loading,
         isAuthenticated,
+        profileLoaded,
         signOut,
         refreshProfile,
       }}
@@ -131,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
 
-  if (ctx === undefined) {
+  if (!ctx) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
 
