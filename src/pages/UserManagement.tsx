@@ -11,37 +11,48 @@ import { Check, Shield, X } from "lucide-react";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      showError("Erro ao carregar usuários");
+      return;
+    }
+
+    setUsers(data || []);
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        showError("Erro ao carregar usuários");
-        return;
-      }
-
-      setUsers(data || []);
-    };
-
     fetchUsers();
   }, []);
 
-  const updateStatus = async (userId: string, newStatus: string) => {
-    setLoading(true);
+  const updateStatus = async (
+    userId: string,
+    newStatus: UserProfile["status"]
+  ) => {
+    setLoadingUserId(userId);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .update({ status: newStatus })
-        .eq("id", userId);
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq("id", userId)
+        .select("*")
+        .single();
 
       if (error) {
+        console.error("Erro Supabase ao atualizar status:", error);
         showError("Erro ao atualizar status do usuário");
+        return;
+      }
+
+      if (!data) {
+        showError("Nenhum usuário foi atualizado");
         return;
       }
 
@@ -49,15 +60,16 @@ const UserManagement = () => {
 
       setUsers((prev) =>
         prev.map((user) =>
-          user.id === userId
-            ? { ...user, status: newStatus as UserProfile["status"] }
-            : user
+          user.id === userId ? (data as UserProfile) : user
         )
       );
-    } catch {
+
+      await fetchUsers();
+    } catch (error) {
+      console.error("Erro inesperado ao atualizar status:", error);
       showError("Erro ao atualizar status do usuário");
     } finally {
-      setLoading(false);
+      setLoadingUserId(null);
     }
   };
 
@@ -134,7 +146,7 @@ const UserManagement = () => {
                               size="sm"
                               className="h-8 bg-indigo-600 text-white hover:bg-indigo-700"
                               onClick={() => handleApprove(user.id)}
-                              disabled={loading}
+                              disabled={loadingUserId === user.id}
                             >
                               <Check size={14} />
                               Aprovar
@@ -145,7 +157,7 @@ const UserManagement = () => {
                               variant="outline"
                               className="h-8 gap-1 border-red-200 text-red-600 hover:bg-red-50"
                               onClick={() => handleReject(user.id)}
-                              disabled={loading}
+                              disabled={loadingUserId === user.id}
                             >
                               <X size={14} />
                               Recusar
