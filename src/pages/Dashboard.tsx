@@ -96,8 +96,7 @@ const Dashboard = () => {
     <div className="space-y-8">
       {/* Botão Nova Análise e Filtro */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <Button
-          asChild
+        <Button          asChild
           className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
         >
           <Link to="/analises/nova">
@@ -113,8 +112,7 @@ const Dashboard = () => {
           >
             Meus processos
           </Button>
-          <Button
-            variant={view === "all" ? "default" : "outline"}
+          <Button            variant={view === "all" ? "default" : "outline"}
             onClick={() => setView("all")}
           >
             Todos os processos
@@ -163,8 +161,7 @@ const Dashboard = () => {
                       canEditAnalysis(profile, item.assigned_analyst_id) ||
                       isAdmin(profile);
                     return (
-                      <tr
-                        key={item.id}
+                      <tr                        key={item.id}
                         className="group hover:bg-slate-50/50 transition-colors"
                       >
                         <td className="py-4 font-medium text-slate-900">

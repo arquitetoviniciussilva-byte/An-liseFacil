@@ -3,16 +3,16 @@ import { mockAnalyses } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowLeft, 
-  FileText, 
-  User, 
-  MapPin, 
-  History, 
+import {
+  ArrowLeft,
+  FileText,
+  User,
+  MapPin,
+  History,
   AlertCircle,
   Download,
   Printer,
-  Edit2
+  Edit2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -91,8 +91,7 @@ const AnalysisDetails = () => {
             <Card className="border-none shadow-sm">
               <CardHeader className="border-b border-slate-50">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <MapPin size={18} className="text-indigo-600" /> Localização
-                </CardTitle>
+                  <MapPin size={18} className="text-indigo-600" /> Localização                </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 <div>
@@ -169,7 +168,7 @@ const AnalysisDetails = () => {
             <CardContent>
               <p className="text-sm text-amber-700 italic">Nenhuma pendência ativa registrada.</p>
               {canEdit && (
-                <Button variant="outline" className="w-full mt-4 border-amber-200 text-amber-700 hover:bg-amber-100">
+                <Button variant="outline" className="w-full border-amber-200 text-amber-700 hover:bg-amber-100">
                   Registrar Pendência
                 </Button>
               )}

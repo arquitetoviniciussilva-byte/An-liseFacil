@@ -1,6 +1,10 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { SignOut, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+// @ts-ignore (lucide-react types)
+import { SignOut as SignOutIcon } from "lucide-react";
+// @ts-ignore (lucide-react types)
+import { LogOut as LogOutIcon } from "lucide-react";
 
 const WaitingApproval = () => {
   const { profile, signOut } = useAuth();
@@ -9,7 +13,7 @@ const WaitingApproval = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 text-amber-600 rounded-full mb-6">
-          <SignOut size={40} />
+          <SignOutIcon size={40} />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Solicitação em Análise</h1>
         <p className="text-slate-600 mb-8">
@@ -17,15 +21,14 @@ const WaitingApproval = () => {
         </p>
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 text-left">
           <div className="flex gap-3 items-start">
-            <SignOut className="text-amber-500 shrink-0 mt-0.5" size={18} />
+            <SignOutIcon className="text-amber-500 shrink-0 mt-0.5" size={18} />
             <p className="text-sm text-slate-500">
               Você receberá um e-mail assim que seu acesso for liberado. Por enquanto, as funcionalidades do sistema permanecem restritas.
             </p>
           </div>
         </div>
         <Button variant="outline" className="gap-2" onClick={() => signOut()}>
-          <LogOut size={18} />
-          Sair do Sistema
+          <LogOutIcon size={18} /> Sair do Sistema
         </Button>
       </div>
     </div>

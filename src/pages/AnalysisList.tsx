@@ -55,16 +55,13 @@ const AnalysisList = ({ filterStatus }: AnalysisListProps) => {
                   <th className="px-6 py-4 font-medium">Responsável Técnico</th>
                   <th className="px-6 py-4 font-medium">Analista</th>
                   <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Ações</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredData.map((item) => (
                   <tr key={item.id} className="group hover:bg-slate-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-semibold text-slate-900">{item.processNumber}</div>
-                      <div className="text-xs text-slate-500">{item.protocolNumber}</div>
-                    </td>
+                    <td className="px-6 py-4 font-medium text-slate-900">{item.processNumber}</td>
                     <td className="px-6 py-4">
                       <div className="text-slate-900 font-medium">{item.requester}</div>
                       <div className="text-xs text-slate-500">{item.document}</div>

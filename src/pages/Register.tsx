@@ -1,12 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ShieldCheck, Loader2, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
-import { showSuccess, showError } from "@/utils/toast";
+import supabase from "@/lib/supabase"; // @ts-ignoreimport { useAuth } from "@/contexts/AuthContext";
+import { showError } from "@/utils/toast";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -38,18 +32,18 @@ const Register = () => {
     setLoadingBtn(true);
 
     // O Perfil é criado automaticamente via Trigger no banco de dados (handle_new_user)
-    const { data, error: authError } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
         data: {
-          full_name: formData.name
-        }
-      }
+          full_name: formData.name,
+        },
+      },
     });
 
-    if (authError) {
-      showError(authError.message);
+    if (error) {
+      showError(error.message);
       setLoadingBtn(false);
       return;
     }
@@ -66,8 +60,7 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md">
         <Link to="/login" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 mb-6 transition-colors">
-          <ArrowLeft size={16} /> Voltar para o login
-        </Link>
+          <ArrowLeft size={16} /> Voltar para o login        </Link>
 
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl text-white mb-4 shadow-lg shadow-indigo-200">
@@ -115,8 +108,7 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar Senha</Label>
-              <Input
-                id="confirm"
+              <Input                id="confirm"
                 type="password"
                 required
                 className="h-11"

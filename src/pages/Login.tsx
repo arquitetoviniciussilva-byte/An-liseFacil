@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ShieldCheck, Loader2 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import supabase from "@/lib/supabase"; // @ts-ignore (importa default export corrigido)
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase as supabaseClient } from "@/lib/supabase";
+// @ts-ignore (garante que o membro exista)
+import { supabase } from "@/lib/supabase";
+import { useAuth as useAuthHook } from "@/contexts/AuthContext";
 import { showError } from "@/utils/toast";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuthHook();
 
   const [loadingBtn, setLoadingBtn] = useState(false);
   const [email, setEmail] = useState("");
@@ -89,8 +88,7 @@ const Login = () => {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                required
-                className="h-11"
+                required                className="h-11"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

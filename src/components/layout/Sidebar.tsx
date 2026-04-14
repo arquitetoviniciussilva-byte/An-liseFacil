@@ -1,14 +1,14 @@
 import { NavLink } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  PlusCircle, 
-  CheckCircle2, 
-  FileBadge, 
+import {
+  LayoutDashboard,
+  FileText,
+  PlusCircle,
+  CheckCircle2,
+  FileBadge,
   Settings,
   LogOut,
   ShieldCheck,
-  Users
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +22,7 @@ export const Sidebar = () => {
     { icon: PlusCircle, label: "Nova Análise", path: "/analises/nova" },
     { icon: CheckCircle2, label: "Aprovados", path: "/aprovados" },
     { icon: FileBadge, label: "Alvarás", path: "/alvaras" },
-    ...(profile?.role === 'admin' ? [{ icon: Users, label: "Usuários", path: "/admin/usuarios" }] : []),
+    ...(profile?.role === "admin" ? [{ icon: Users, label: "Usuários", path: "/admin/usuarios" }] : []),
     { icon: Settings, label: "Configurações", path: "/configuracoes" },
   ];
 
