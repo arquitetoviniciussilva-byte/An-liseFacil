@@ -1,179 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import supabase from "@/lib/supabase";
-import { showError, showSuccess } from "@/utils/toast";
-import { UserProfile } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, Shield, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
-const UserManagement = () => {
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(false);
+const WaitingApproval = () => {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        showError("Erro ao carregar usuários");
-        return;
-      }
-
-      setUsers(data || []);
-    };
-
-    fetchUsers();
-  }, []);
-
-  const updateStatus = async (userId: string, newStatus: string) => {
-    setLoading(true);
-
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ status: newStatus })
-        .eq("id", userId);
-
-      if (error) {
-        showError("Erro ao atualizar status do usuário");
-        return;
-      }
-
-      showSuccess(`Status do usuário atualizado para ${newStatus}`);
-
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === userId
-            ? { ...user, status: newStatus as UserProfile["status"] }
-            : user
-        )
-      );
-    } catch {
-      showError("Erro ao atualizar status do usuário");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApprove = async (userId: string) => {
-    await updateStatus(userId, "ativo");
-  };
-
-  const handleReject = async (userId: string) => {
-    await updateStatus(userId, "recusado");
+  const handleBackToLogin = async () => {
+    await signOut();
+    navigate("/login");
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="border-none shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Shield className="text-indigo-600" size={20} />
-            Gestão de Acessos
-          </CardTitle>
-        </CardHeader>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <div className="w-full max-w-md text-center">
+        <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+          <LogOut size={40} />
+        </div>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400">
-                  <th className="px-6 py-4 font-medium">Usuário</th>
-                  <th className="px-6 py-4 font-medium">E-mail</th>
-                  <th className="px-6 py-4 font-medium">Perfil</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Data Criação</th>
-                  <th className="px-6 py-4 text-right font-medium">Ações</th>
-                </tr>
-              </thead>
+        <h1 className="mb-2 text-2xl font-bold text-slate-900">
+          Solicitação em Análise
+        </h1>
 
-              <tbody className="divide-y divide-slate-50">
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="group transition-colors hover:bg-slate-50/50"
-                  >
-                    <td className="px-6 py-4 font-medium text-slate-900">
-                      {user.nome}
-                    </td>
+        <p className="mb-8 text-slate-600">
+          Olá, <span className="font-semibold">{profile?.nome}</span>. Sua
+          solicitação de acesso foi recebida e está aguardando aprovação de um
+          administrador.
+        </p>
 
-                    <td className="px-6 py-4 text-slate-600">{user.email}</td>
-
-                    <td className="px-6 py-4 text-slate-600">{user.role}</td>
-
-                    <td className="px-6 py-4">
-                      <Badge
-                        variant={
-                          user.status === "ativo"
-                            ? "default"
-                            : user.status === "pendente"
-                              ? "outline"
-                              : "destructive"
-                        }
-                        className={user.status === "ativo" ? "bg-emerald-500" : ""}
-                      >
-                        {user.status}
-                      </Badge>
-                    </td>
-
-                    <td className="px-6 py-4 text-slate-500">
-                      {new Date(user.created_at).toLocaleDateString("pt-BR")}
-                    </td>
-
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {user.status === "pendente" && (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              className="h-8 bg-indigo-600 text-white hover:bg-indigo-700"
-                              onClick={() => handleApprove(user.id)}
-                              disabled={loading}
-                            >
-                              <Check size={14} />
-                              Aprovar
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 gap-1 border-red-200 text-red-600 hover:bg-red-50"
-                              onClick={() => handleReject(user.id)}
-                              disabled={loading}
-                            >
-                              <X size={14} />
-                              Recusar
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {users.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-6 py-8 text-center text-slate-500"
-                    >
-                      Nenhum usuário encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 text-left shadow-sm">
+          <div className="flex items-start gap-3">
+            <LogOut className="mt-0.5 shrink-0 text-amber-500" size={18} />
+            <p className="text-sm text-slate-500">
+              Seu acesso ao sistema será liberado após aprovação do
+              administrador. Até lá, esta conta permanecerá sem acesso às áreas
+              internas.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={handleBackToLogin}
+        >
+          Voltar para o login
+        </Button>
+      </div>
     </div>
   );
 };
 
-export default UserManagement;
+export default WaitingApproval;
