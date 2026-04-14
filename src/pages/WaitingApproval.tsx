@@ -1,7 +1,7 @@
 "use client";
 
-import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -10,8 +10,16 @@ const WaitingApproval = () => {
   const navigate = useNavigate();
 
   const handleBackToLogin = async () => {
-    await signOut();
-    navigate("/login");
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Erro ao sair da conta:", error);
+    } finally {
+      navigate("/login", { replace: true });
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
+    }
   };
 
   return (
@@ -43,6 +51,7 @@ const WaitingApproval = () => {
         </div>
 
         <Button
+          type="button"
           variant="outline"
           className="gap-2"
           onClick={handleBackToLogin}
