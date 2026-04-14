@@ -59,7 +59,6 @@ const AnalysisDetails = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Informações Principais */}
           <Card className="border-none shadow-sm">
             <CardHeader className="border-b border-slate-50">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -86,7 +85,6 @@ const AnalysisDetails = () => {
             </CardContent>
           </Card>
 
-          {/* Localização e Dados Técnicos */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Card className="border-none shadow-sm">
               <CardHeader className="border-b border-slate-50">
@@ -135,7 +133,6 @@ const AnalysisDetails = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Histórico */}
           <Card className="border-none shadow-sm">
             <CardHeader className="border-b border-slate-50">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -158,7 +155,6 @@ const AnalysisDetails = () => {
             </CardContent>
           </Card>
 
-          {/* Pendências Futuras */}
           <Card className="border-none shadow-sm bg-amber-50/30 border border-amber-100">
             <CardHeader>
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-amber-800">

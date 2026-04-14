@@ -55,13 +55,11 @@ const Dashboard = () => {
   const { profile } = useAuth();
   const [view, setView] = useState<"me" | "all">("all");
 
-  // Filtragem de análises conforme visão selecionada
   const filteredAnalyses =
     view === "me"
       ? mockAnalyses.filter((a) => a.assigned_analyst_id === profile?.id)
       : mockAnalyses;
 
-  // Cards na ordem solicitada
   const cardsData = [
     {
       title: "Projetos Analisados",
@@ -89,12 +87,10 @@ const Dashboard = () => {
     },
   ];
 
-  // Limita a 8 registros recentes
   const recentAnalyses = filteredAnalyses.slice(0, 8);
 
   return (
     <div className="space-y-8">
-      {/* Botão Nova Análise e Filtro */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Button          asChild
           className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
@@ -120,7 +116,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {cardsData.map((card) => (
           <SummaryCard key={card.title} {...card} />
@@ -128,7 +123,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Análises Recentes */}
         <Card className="lg:col-span-2 border-none shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold">
@@ -201,7 +195,6 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Espaço reservado (pode ser usado futuramente) */}
         <div className="hidden lg:block"></div>
       </div>
     </div>

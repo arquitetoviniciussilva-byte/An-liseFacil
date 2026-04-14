@@ -1,6 +1,11 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import supabase from "@/lib/supabase"; // @ts-ignoreimport { useAuth } from "@/contexts/AuthContext";
-import { showError } from "@/utils/toast";
+import supabase from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "@/components/ui/loader";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -15,7 +20,6 @@ const Register = () => {
     confirm: ""
   });
 
-  // Se já houver sessão válida, redireciona para a página de origem ou dashboard
   useEffect(() => {
     if (!loading && isAuthenticated) {
       const from = (location.state as any)?.from?.pathname || "/dashboard";
@@ -26,12 +30,12 @@ const Register = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirm) {
-      return showError("As senhas não coincidem");
+      showError("As senhas não coincidem");
+      return;
     }
 
     setLoadingBtn(true);
 
-    // O Perfil é criado automaticamente via Trigger no banco de dados (handle_new_user)
     const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
@@ -108,7 +112,8 @@ const Register = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirmar Senha</Label>
-              <Input                id="confirm"
+              <Input
+                id="confirm"
                 type="password"
                 required
                 className="h-11"
@@ -116,7 +121,11 @@ const Register = () => {
                 onChange={(e) => setFormData({...formData, confirm: e.target.value})}
               />
             </div>
-            <Button type="submit" disabled={loadingBtn} className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold mt-2">
+            <Button
+              type="submit"
+              disabled={loadingBtn}
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold mt-2"
+            >
               {loadingBtn ? <Loader2 className="animate-spin" /> : "Enviar Solicitação"}
             </Button>
           </form>

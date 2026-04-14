@@ -17,6 +17,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile: null,
     loading: true,
     isAuthenticated: false,
+    signOut: () => supabase.auth.signOut(),
+    refreshProfile: () => {
+      const { data: { user } } = supabase.auth.getUser();
+      if (user) fetchProfile(user);
+    }
   });
 
   useEffect(() => {
@@ -35,10 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', session.user.id)
           .single();
         if (!error) {
-          setState(prev => ({
-            ...prev,
-            profile: data as UserProfile,
-          }));
+          setState(prev => ({ ...prev, profile: data as UserProfile }));
         }
       }
     };
@@ -59,24 +61,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', user.id)
         .single();
       if (!error) {
-        setState(prev => ({
-          ...prev,
-          profile: data as UserProfile,
-        }));
+        setState(prev => ({ ...prev, profile: data as UserProfile }));
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-    }
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const refreshProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await fetchProfile(user);
     }
   };
 

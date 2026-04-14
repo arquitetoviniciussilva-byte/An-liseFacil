@@ -1,22 +1,21 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import supabase from "@/lib/supabase"; // @ts-ignore (importa default export corrigido)
+import supabase from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase as supabaseClient } from "@/lib/supabase";
-// @ts-ignore (garante que o membro exista)
-import { supabase } from "@/lib/supabase";
-import { useAuth as useAuthHook } from "@/contexts/AuthContext";
-import { showError } from "@/utils/toast";
+import { ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "@/components/ui/loader";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading } = useAuthHook();
+  const { isAuthenticated, loading } = useAuth();
 
   const [loadingBtn, setLoadingBtn] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Se já houver sessão válida, redireciona para a página de origem ou dashboard
   useEffect(() => {
     if (!loading && isAuthenticated) {
       const from = (location.state as any)?.from?.pathname || "/dashboard";
@@ -34,7 +33,6 @@ const Login = () => {
     });
 
     if (error) {
-      console.error("Erro detalhado do Supabase:", error);
       showError(
         error.message === "Invalid login credentials"
           ? "E-mail ou senha incorretos"
@@ -42,8 +40,7 @@ const Login = () => {
       );
       setLoadingBtn(false);
     } else {
-      // A mudança de sessão será capturada pelo AuthContext,
-      // que já redirecionará o usuário via useEffect acima.
+      // A mudança de sessão será capturada pelo AuthContext
     }
   };
 
@@ -75,20 +72,13 @@ const Login = () => {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Senha</Label>
-                <button
-                  type="button"
-                  className="text-xs font-medium text-indigo-600 hover:underline"
-                >
-                  Esqueceu a senha?
-                </button>
-              </div>
+              <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                required                className="h-11"
+                required
+                className="h-11"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
