@@ -17,6 +17,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile: null,
     loading: true,
     isAuthenticated: false,
+    signOut: async () => await supabase.auth.signOut(),
+    refreshProfile: async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        await fetchProfile(data.user);
+      }
+    }
   });
 
   useEffect(() => {
@@ -48,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (user: UserProfile) => {
+  const fetchProfile = async (user: any) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -63,19 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const refreshProfile = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data?.user) {
-      await fetchProfile(data.user);
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ ...state, signOut, refreshProfile }}>
+    <AuthContext.Provider value={state}>
       {children}
     </AuthContext.Provider>
   );

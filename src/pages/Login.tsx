@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { showError } from "@/utils/toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "@/components/ui/loader";
 import { ArrowLeft } from "lucide-react";
 
 const Login = () => {
@@ -86,7 +85,7 @@ const Login = () => {
               disabled={loadingBtn}
               className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold"
             >
-              {loadingBtn ? <Loader2 className="animate-spin" /> : "Entrar no Sistema"}
+              {loadingBtn ? "Carregando..." : "Entrar no Sistema"}
             </Button>
           </form>
 

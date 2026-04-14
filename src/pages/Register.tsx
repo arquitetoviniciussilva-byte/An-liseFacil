@@ -4,8 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "@/components/ui/loader";
 import { ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -125,7 +125,7 @@ const Register = () => {
               disabled={loadingBtn}
               className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base font-semibold mt-2"
             >
-              {loadingBtn ? <Loader2 className="animate-spin" /> : "Enviar Solicitação"}
+              {loadingBtn ? "Carregando..." : "Enviar Solicitação"}
             </Button>
           </form>
         </div>
