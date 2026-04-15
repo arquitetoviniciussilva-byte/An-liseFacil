@@ -41,6 +41,8 @@ const Login = () => {
       setLoadingBtn(false);
     } else {
       // session change handled by AuthContext
+      // Reset loading button state as backup
+      setLoadingBtn(false);
     }
   };
 

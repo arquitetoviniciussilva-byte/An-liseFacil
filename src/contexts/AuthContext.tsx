@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setProfile(null);
       setIsAuthenticated(false);
       setProfileLoaded(true);
+      setLoading(false);
       return;
     }
 
@@ -126,8 +127,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       setIsAuthenticated(true);
-      await fetchProfile(session.user);
-      setLoading(false);
+      try {
+        await fetchProfile(session.user);
+      } finally {
+        // Always set loading to false, even if fetchProfile fails
+        setLoading(false);
+      }
     });
 
     return () => {
