@@ -2,16 +2,18 @@
 
 import { useEffect, useState } from "react";
 import supabase from "@/lib/supabase";
-import { showError, showSuccess } from "@/utils/toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { showSuccess, showError } from "@/utils/toast";
 import { UserProfile } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Shield, X } from "lucide-react";
+import { Check, X, Shield } from "lucide-react";
 
 const UserManagement = () => {
+  const { signOut } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchUsers = async () => {
     const { data, error } = await supabase
@@ -21,55 +23,37 @@ const UserManagement = () => {
 
     if (error) {
       showError("Erro ao carregar usuários");
-      return;
+    } else {
+      setUsers(data || []);
     }
-
-    setUsers(data || []);
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const updateStatus = async (
-    userId: string,
-    newStatus: UserProfile["status"]
-  ) => {
-    setLoadingUserId(userId);
-
+  const updateStatus = async (userId: string, newStatus: string) => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", userId)
-        .select("*")
-        .single();
+        .update({ status: newStatus })
+        .eq("id", userId);
 
       if (error) {
-        console.error("Erro Supabase ao atualizar status:", error);
         showError("Erro ao atualizar status do usuário");
-        return;
+      } else {
+        showSuccess(`Status do usuário atualizado para ${newStatus}`);
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === userId ? { ...u, status: newStatus as any } : u,
+          ),
+        );
       }
-
-      if (!data) {
-        showError("Nenhum usuário foi atualizado");
-        return;
-      }
-
-      showSuccess(`Status do usuário atualizado para ${newStatus}`);
-
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === userId ? (data as UserProfile) : user
-        )
-      );
-
-      await fetchUsers();
-    } catch (error) {
-      console.error("Erro inesperado ao atualizar status:", error);
+    } catch {
       showError("Erro ao atualizar status do usuário");
     } finally {
-      setLoadingUserId(null);
+      setLoading(false);
     }
   };
 
@@ -97,67 +81,60 @@ const UserManagement = () => {
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400">
                   <th className="px-6 py-4 font-medium">Usuário</th>
-                  <th className="px-6 py-4 font-medium">E-mail</th>
+                  <th className="px-6 py-4 font-medium">E‑mail</th>
                   <th className="px-6 py-4 font-medium">Perfil</th>
                   <th className="px-6 py-4 font-medium">Status</th>
                   <th className="px-6 py-4 font-medium">Data Criação</th>
-                  <th className="px-6 py-4 text-right font-medium">Ações</th>
+                  <th className="px-6 py-4 font-medium text-right">Ações</th>
                 </tr>
               </thead>
-
               <tbody className="divide-y divide-slate-50">
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    className="group transition-colors hover:bg-slate-50/50"
+                    className="group hover:bg-slate-50/50 transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-slate-900">
                       {user.nome}
                     </td>
-
                     <td className="px-6 py-4 text-slate-600">{user.email}</td>
-
                     <td className="px-6 py-4 text-slate-600">{user.role}</td>
-
                     <td className="px-6 py-4">
                       <Badge
                         variant={
                           user.status === "ativo"
                             ? "default"
                             : user.status === "pendente"
-                              ? "outline"
-                              : "destructive"
+                            ? "outline"
+                            : "destructive"
                         }
                         className={user.status === "ativo" ? "bg-emerald-500" : ""}
                       >
                         {user.status}
                       </Badge>
                     </td>
-
                     <td className="px-6 py-4 text-slate-500">
                       {new Date(user.created_at).toLocaleDateString("pt-BR")}
                     </td>
-
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {user.status === "pendente" && (
                           <div className="flex items-center gap-1">
                             <Button
                               size="sm"
-                              className="h-8 bg-indigo-600 text-white hover:bg-indigo-700"
+                              className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white"
                               onClick={() => handleApprove(user.id)}
-                              disabled={loadingUserId === user.id}
+                              disabled={loading}
                             >
                               <Check size={14} />
                               Aprovar
                             </Button>
-
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-8 gap-1 border-red-200 text-red-600 hover:bg-red-50"
+                              className="h-8 text-red-600 border-red-200 hover:bg-red-50 gap-1"
                               onClick={() => handleReject(user.id)}
-                              disabled={loadingUserId === user.id}
+                              disabled={loading}
                             >
                               <X size={14} />
                               Recusar
@@ -168,7 +145,6 @@ const UserManagement = () => {
                     </td>
                   </tr>
                 ))}
-
                 {users.length === 0 && (
                   <tr>
                     <td
