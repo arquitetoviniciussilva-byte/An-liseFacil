@@ -9,11 +9,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Shield } from "lucide-react";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 
 const UserManagement = () => {
   const { signOut } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const isMounted = useIsMounted();
 
   const fetchUsers = async () => {
     const { data, error } = await supabase
@@ -33,6 +35,7 @@ const UserManagement = () => {
   }, []);
 
   const updateStatus = async (userId: string, newStatus: string) => {
+    if (!isMounted) return;
     setLoading(true);
     try {
       const { error } = await supabase
@@ -53,16 +56,16 @@ const UserManagement = () => {
     } catch {
       showError("Erro ao atualizar status do usuário");
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
   const handleApprove = async (userId: string) => {
-    await updateStatus(userId, "ativo");
+    if (isMounted) await updateStatus(userId, "ativo");
   };
 
   const handleReject = async (userId: string) => {
-    await updateStatus(userId, "recusado");
+    if (isMounted) await updateStatus(userId, "recusado");
   };
 
   return (
