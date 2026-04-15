@@ -74,6 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
+    let isMounted = true;
+    
     const processSession = async () => {
       try {
         setLoading(true);
@@ -84,21 +86,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } = await supabase.auth.getSession();
 
         if (!session?.user) {
-          setIsAuthenticated(false);
-          setProfile(null);
-          setProfileLoaded(true);
+          if (isMounted) {
+            setIsAuthenticated(false);
+            setProfile(null);
+            setProfileLoaded(true);
+            setLoading(false);
+          }
           return;
         }
 
-        setIsAuthenticated(true);
-        await fetchProfile(session.user);
+        if (isMounted) {
+          setIsAuthenticated(true);
+          await fetchProfile(session.user);
+        }
       } catch (error) {
         console.error("Erro ao processar sessão:", error);
-        setIsAuthenticated(false);
-        setProfile(null);
-        setProfileLoaded(true);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          setIsAuthenticated(false);
+          setProfile(null);
+          setProfileLoaded(true);
+          setLoading(false);
+        }
       }
     };
 
@@ -107,6 +115,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+      
       if (!session?.user) {
         setProfile(null);
         setIsAuthenticated(false);
@@ -121,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
