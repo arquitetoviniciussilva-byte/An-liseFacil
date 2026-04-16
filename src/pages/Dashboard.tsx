@@ -246,9 +246,10 @@ const Dashboard = () => {
               <thead>
                 <tr className="bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   <th className="px-6 py-4">Processo</th>
-                  <th className="px-6 py-4">Requerente / Documento</th>
+                  <th className="px-6 py-4">Requerente</th>
+                  <th className="px-6 py-4">CNPJ / CPF</th>
                   <th className="px-6 py-4">Categoria</th>
-                  <th className="px-6 py-4">Endereço</th>
+                  <th className="px-6 py-4">Obra (Endereço)</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Última Mov.</th>
                   <th className="px-6 py-4 text-right">Ação</th>
@@ -265,11 +266,12 @@ const Dashboard = () => {
                       {item.process_number}
                     </td>
 
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-slate-700 line-clamp-1">{item.requester}</span>
-                        <span className="text-[11px] text-slate-400">{item.document}</span>
-                      </div>
+                    <td className="px-6 py-4 font-semibold text-slate-700">
+                      <span className="line-clamp-1">{item.requester}</span>
+                    </td>
+
+                    <td className="px-6 py-4 text-slate-500 font-medium">
+                      {item.document}
                     </td>
 
                     <td className="px-6 py-4 text-slate-600">
@@ -303,7 +305,7 @@ const Dashboard = () => {
                 {recentAnalyses.length === 0 && !loading && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="py-12 text-center text-slate-400 italic"
                     >
                       Nenhum registro encontrado.
