@@ -6,8 +6,8 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading, profile, profileLoaded } = useAuth();
   const location = useLocation();
 
-  // Enquanto estiver carregando a sessão ou o perfil, mostra o spinner global
-  if (loading || (isAuthenticated && !profileLoaded)) {
+  // Enquanto estiver carregando a sessão inicial, mostra o spinner
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
@@ -18,21 +18,37 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Se não estiver autenticado, redireciona para o login
+  // Se não estiver autenticado, vai para o login
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Validação rigorosa de status
-  if (profile?.status === "pendente") {
-    return <Navigate to="/aguardando-aprovacao" replace />;
+  // Se autenticado mas o perfil ainda não carregou (ex: delay no trigger), aguarda um pouco mais
+  if (!profileLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-slate-600 font-medium">Carregando perfil...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (profile?.status === "recusado" || profile?.status === "inativo") {
-    // Para perfis sem acesso, forçamos o logout para limpar a sessão
+  // Se o perfil carregou mas é nulo (erro grave ou usuário deletado do banco de perfis)
+  if (!profile) {
     return <Navigate to="/login" replace />;
   }
 
-  // Só aqui os filhos (DashboardLayout, etc) são montados
+  // Validação de status
+  if (profile.status === "pendente") {
+    return <Navigate to="/aguardando-aprovacao" replace />;
+  }
+
+  if (profile.status === "recusado" || profile.status === "inativo") {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Acesso liberado (status ativo)
   return <>{children}</>;
 };

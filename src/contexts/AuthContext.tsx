@@ -27,13 +27,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle(); // maybeSingle evita erro se o registro ainda não existir
 
-      if (error || !data) {
-        setProfile(null);
-      } else {
-        setProfile(data as UserProfile);
-      }
+      if (error) throw error;
+      setProfile(data as UserProfile || null);
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
       setProfile(null);
@@ -72,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (session?.user) {
           setIsAuthenticated(true);
-          // Aguarda o perfil ser carregado antes de liberar o loading inicial
           await fetchProfile(session.user.id);
         } else {
           setIsAuthenticated(false);
@@ -80,7 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setProfileLoaded(true);
         }
       } catch (error) {
-        console.error("Erro na inicialização:", error);
+        console.error("Erro na inicialização auth:", error);
+        setProfileLoaded(true);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -96,12 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (session?.user) {
           await fetchProfile(session.user.id);
         }
-        setLoading(false);
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setProfile(null);
         setProfileLoaded(true);
-        setLoading(false);
       }
     });
 

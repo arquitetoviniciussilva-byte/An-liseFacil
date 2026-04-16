@@ -83,6 +83,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
+    if (!profile) return;
+    
     setLoading(true);
     try {
       let query = supabase
@@ -93,7 +95,7 @@ const Dashboard = () => {
         `)
         .order("updated_at", { ascending: false });
 
-      if (view === "me" && profile?.id) {
+      if (view === "me") {
         query = query.eq("assigned_analyst_id", profile.id);
       }
 
@@ -174,7 +176,6 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header com alinhamento refinado */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm w-fit">
           <Button
@@ -216,14 +217,12 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Grid de Cards Principais */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {cardsData.map((card) => (
           <SummaryCard key={card.title} {...card} />
         ))}
       </div>
 
-      {/* Tabela de Análises Recentes */}
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 bg-white px-6 py-5">
           <CardTitle className="text-base font-bold text-slate-800">
@@ -318,7 +317,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Bloco Inferior de Pendências */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MiniStatCard
           title="Pendência documental"
