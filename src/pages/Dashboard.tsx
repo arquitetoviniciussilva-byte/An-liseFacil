@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -77,21 +77,26 @@ const MiniStatCard = ({
 );
 
 const Dashboard = () => {
-  const { profile } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
   const [view, setView] = useState<"me" | "all">("all");
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchDashboardData = async () => {
-    if (!profile) return;
+  const fetchDashboardData = useCallback(async () => {
+    // Se não estiver autenticado ou não houver ID de perfil, não executa a query
+    if (!isAuthenticated || !profile?.id) {
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     try {
+      // Ajustada a query para evitar erro PGRST200 usando join direto pela coluna
       let query = supabase
         .from("analyses")
         .select(`
           *,
-          analyst:profiles!analyses_assigned_analyst_id_fkey(nome)
+          analyst:assigned_analyst_id(nome)
         `)
         .order("updated_at", { ascending: false });
 
@@ -105,16 +110,15 @@ const Dashboard = () => {
       setAnalyses(data || []);
     } catch (error) {
       console.error("Erro ao buscar dados do dashboard:", error);
-      // Em caso de erro, mantemos a lista vazia mas finalizamos o loading
       setAnalyses([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [view, profile?.id, isAuthenticated]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [view, profile?.id]);
+  }, [fetchDashboardData]);
 
   const stats = useMemo(() => {
     const inProgress = analyses.filter(a => a.status === 'em_andamento').length;

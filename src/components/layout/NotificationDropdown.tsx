@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Bell, Check, CheckCheck, Clock } from "lucide-react";
 import {
   DropdownMenu,
@@ -21,43 +21,54 @@ import { cn } from "@/lib/utils";
 import { showError } from "@/utils/toast";
 
 export const NotificationDropdown = () => {
-  const { profile } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const fetchNotifications = async () => {
-    if (!profile?.id) return;
-
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", profile.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    if (error) {
-      console.error("Erro ao buscar notificações:", error);
-    } else {
-      setNotifications(data || []);
+  const fetchNotifications = useCallback(async () => {
+    if (!isAuthenticated || !profile?.id) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  };
+
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar notificações:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [profile?.id, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated || !profile?.id) {
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+
     fetchNotifications();
 
     // Real-time subscription
     const channel = supabase
-      .channel("schema-db-changes")
+      .channel(`notifications-${profile.id}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${profile?.id}`,
+          filter: `user_id=eq.${profile.id}`,
         },
         () => {
           fetchNotifications();
@@ -68,7 +79,7 @@ export const NotificationDropdown = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.id]);
+  }, [profile?.id, isAuthenticated, fetchNotifications]);
 
   const markAsRead = async (id: string) => {
     const { error } = await supabase
@@ -192,7 +203,7 @@ export const NotificationDropdown = () => {
           <Button
             variant="ghost"
             className="w-full text-xs text-slate-500 hover:text-indigo-600"
-            onClick={() => {}} // Aqui poderia navegar para uma página de notificações
+            onClick={() => {}}
           >
             Ver todas as notificações
           </Button>
