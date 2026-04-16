@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import supabase from "@/lib/supabase";
 import { UserProfile } from "@/types";
 
@@ -21,7 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const fetchProfile = async (userId: string, retries = 3) => {
+  const fetchProfile = useCallback(async (userId: string, retries = 3) => {
     try {
       for (let i = 0; i < retries; i++) {
         const { data, error } = await supabase
@@ -37,38 +37,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         if (i < retries - 1) {
-          // Aguarda 1 segundo antes de tentar novamente (esperando o trigger do banco)
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
+      // Se chegou aqui após as tentativas, define como null
+      setProfile(null);
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
-    } finally {
       setProfile(null);
+    } finally {
       setProfileLoaded(true);
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
-      // Limpamos os estados locais primeiro para uma resposta visual imediata
       setProfile(null);
       setIsAuthenticated(false);
       setProfileLoaded(true);
       setLoading(false);
-      
       await supabase.auth.signOut();
     } catch (error) {
       console.error("Erro ao encerrar sessão:", error);
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await fetchProfile(user.id);
     }
-  };
+  }, [fetchProfile]);
 
   useEffect(() => {
     let isMounted = true;
@@ -118,19 +117,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
+
+  const contextValue = useMemo(() => ({
+    profile,
+    loading,
+    isAuthenticated,
+    profileLoaded,
+    signOut,
+    refreshProfile,
+  }), [profile, loading, isAuthenticated, profileLoaded, signOut, refreshProfile]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        profile,
-        loading,
-        isAuthenticated,
-        profileLoaded,
-        signOut,
-        refreshProfile,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
