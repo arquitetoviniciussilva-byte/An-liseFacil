@@ -72,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setIsAuthenticated(true);
     await fetchProfile(user);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -99,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (isMounted) {
           setIsAuthenticated(true);
           await fetchProfile(session.user);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Erro ao processar sessão:", error);
@@ -130,8 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         await fetchProfile(session.user);
       } finally {
-        // Always set loading to false, even if fetchProfile fails
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     });
 
