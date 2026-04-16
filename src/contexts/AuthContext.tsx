@@ -21,22 +21,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const fetchProfile = async (user: { id: string }) => {
+  const fetchProfile = async (userId: string) => {
     try {
-      setProfileLoaded(false);
-
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", userId)
         .single();
 
       if (error || !data) {
         setProfile(null);
-        return;
+      } else {
+        setProfile(data as UserProfile);
       }
-
-      setProfile(data as UserProfile);
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
       setProfile(null);
@@ -57,82 +54,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const refreshProfile = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      setProfile(null);
-      setIsAuthenticated(false);
-      setProfileLoaded(true);
-      setLoading(false);
-      return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await fetchProfile(user.id);
     }
-
-    setIsAuthenticated(true);
-    await fetchProfile(user);
-    setLoading(false);
   };
 
   useEffect(() => {
     let isMounted = true;
-    
-    const processSession = async () => {
+
+    const initializeAuth = async () => {
       try {
-        setLoading(true);
-        setProfileLoaded(false);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session?.user) {
-          if (isMounted) {
-            setIsAuthenticated(false);
-            setProfile(null);
-            setProfileLoaded(true);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (isMounted) {
+        if (session?.user) {
           setIsAuthenticated(true);
-          await fetchProfile(session.user);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Erro ao processar sessão:", error);
-        if (isMounted) {
+          await fetchProfile(session.user.id);
+        } else {
           setIsAuthenticated(false);
           setProfile(null);
           setProfileLoaded(true);
-          setLoading(false);
         }
+      } catch (error) {
+        console.error("Erro na inicialização:", error);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
 
-    processSession();
+    initializeAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
-      
-      if (!session?.user) {
-        setProfile(null);
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setIsAuthenticated(true);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+        setLoading(false);
+      } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
+        setProfile(null);
         setProfileLoaded(true);
         setLoading(false);
-        return;
-      }
-
-      setIsAuthenticated(true);
-      try {
-        await fetchProfile(session.user);
-      } finally {
-        if (isMounted) setLoading(false);
       }
     });
 
@@ -160,10 +127,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-
-  if (!ctx) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 };
