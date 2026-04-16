@@ -52,13 +52,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signOut = async () => {
-    setLoading(true);
+    // Não definimos loading como true aqui para evitar o bloqueio da UI durante o logout
     try {
       await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Erro ao encerrar sessão:", error);
+    } finally {
+      // Limpamos os estados imediatamente para forçar o redirecionamento na PrivateRoute
       setProfile(null);
       setIsAuthenticated(false);
       setProfileLoaded(true);
-    } finally {
       setLoading(false);
     }
   };
