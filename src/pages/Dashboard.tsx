@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState, useMemo } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -9,18 +10,18 @@ import {
   Plus,
   FileWarning,
   FileClock,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { dashboardSummary, mockAnalyses } from "@/data/mockData";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { canEditAnalysis, isAdmin } from "@/lib/permissions";
-import { useMemo, useState } from "react";
+import { isAdmin } from "@/lib/permissions";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import supabase from "@/lib/supabase";
 
 const SummaryCard = ({
   title,
@@ -79,68 +80,98 @@ const MiniStatCard = ({
 const Dashboard = () => {
   const { profile } = useAuth();
   const [view, setView] = useState<"me" | "all">("all");
+  const [analyses, setAnalyses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredAnalyses =
-    view === "me"
-      ? mockAnalyses.filter((a) => a.assigned_analyst_id === profile?.id)
-      : mockAnalyses;
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("analyses")
+        .select(`
+          *,
+          analyst:profiles!analyses_assigned_analyst_id_fkey(nome)
+        `)
+        .order("updated_at", { ascending: false });
+
+      if (view === "me" && profile?.id) {
+        query = query.eq("assigned_analyst_id", profile.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setAnalyses(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar dados do dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [view, profile?.id]);
+
+  const stats = useMemo(() => {
+    const inProgress = analyses.filter(a => a.status === 'em_andamento').length;
+    const docPending = analyses.filter(a => a.status === 'pendencia_documental').length;
+    const techPending = analyses.filter(a => a.status === 'pendencia_tecnica').length;
+    const approved = analyses.filter(a => a.status === 'aprovado').length;
+    const permitsIssued = analyses.filter(a => a.status === 'alvara_emitido').length;
+    
+    const semMovimentacao = analyses.filter(a => {
+      const diff = Date.now() - new Date(a.updated_at).getTime();
+      return diff > (15 * 24 * 60 * 60 * 1000);
+    }).length;
+
+    return {
+      inProgress,
+      pending: docPending + techPending,
+      approved,
+      permitsIssued,
+      docPending,
+      techPending,
+      semMovimentacao
+    };
+  }, [analyses]);
 
   const cardsData = [
     {
-      title: "Projetos Analisados",
-      value: dashboardSummary.inProgress,
+      title: "Projetos em Análise",
+      value: stats.inProgress,
       icon: Clock,
       color: "bg-blue-50 text-blue-600",
     },
     {
       title: "Projetos Pendentes",
-      value: dashboardSummary.docPending + dashboardSummary.techPending,
+      value: stats.pending,
       icon: AlertCircle,
       color: "bg-amber-50 text-amber-600",
     },
     {
       title: "Projetos Aprovados",
-      value: dashboardSummary.approved,
+      value: stats.approved,
       icon: CheckCircle2,
       color: "bg-emerald-50 text-emerald-600",
     },
     {
-      title: "Alvarás Assinados",
-      value: dashboardSummary.permitsIssued,
+      title: "Alvarás Emitidos",
+      value: stats.permitsIssued,
       icon: FileBadge,
       color: "bg-indigo-50 text-indigo-600",
     },
   ];
 
-  const recentAnalyses = filteredAnalyses.slice(0, 8);
+  const recentAnalyses = analyses.slice(0, 8);
 
-  const pendingSummary = useMemo(() => {
-    const documental = filteredAnalyses.filter(
-      (item) => item.status === "Pendência Documental"
-    ).length;
-
-    const tecnica = filteredAnalyses.filter(
-      (item) => item.status === "Pendência Técnica"
-    ).length;
-
-    const aguardandoAlvara = filteredAnalyses.filter(
-      (item) => item.status === "Aprovado"
-    ).length;
-
-    const semMovimentacao = filteredAnalyses.filter((item) => {
-      const updatedAt = new Date(item.updatedAt).getTime();
-      const today = Date.now();
-      const diffDays = (today - updatedAt) / (1000 * 60 * 60 * 24);
-      return diffDays > 15;
-    }).length;
-
-    return {
-      documental,
-      tecnica,
-      aguardandoAlvara,
-      semMovimentacao,
-    };
-  }, [filteredAnalyses]);
+  if (loading && analyses.length === 0) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -211,9 +242,9 @@ const Dashboard = () => {
                 <tr className="border-b border-slate-100 text-slate-400">
                   <th className="pb-3 pr-4 font-medium">Processo</th>
                   <th className="pb-3 pr-4 font-medium">Requerente</th>
-                  <th className="pb-3 pr-4 font-medium">CNPJ</th>
+                  <th className="pb-3 pr-4 font-medium">Documento</th>
                   <th className="pb-3 pr-4 font-medium">Categoria</th>
-                  <th className="pb-3 pr-4 font-medium">Obra</th>
+                  <th className="pb-3 pr-4 font-medium">Endereço</th>
                   <th className="pb-3 pr-4 font-medium">Status</th>
                   <th className="pb-3 pr-4 font-medium">Última Mov.</th>
                   <th className="pb-3 text-right font-medium">Ação</th>
@@ -221,64 +252,58 @@ const Dashboard = () => {
               </thead>
 
               <tbody className="divide-y divide-slate-50">
-                {recentAnalyses.map((item) => {
-                  const canEdit =
-                    canEditAnalysis(profile, item.assigned_analyst_id) ||
-                    isAdmin(profile);
+                {recentAnalyses.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="group transition-colors hover:bg-slate-50/50"
+                  >
+                    <td className="py-4 pr-4 font-medium text-slate-900 whitespace-nowrap">
+                      {item.process_number}
+                    </td>
 
-                  return (
-                    <tr
-                      key={item.id}
-                      className="group transition-colors hover:bg-slate-50/50"
-                    >
-                      <td className="py-4 pr-4 font-medium text-slate-900 whitespace-nowrap">
-                        {item.processNumber}
-                      </td>
+                    <td className="py-4 pr-4 text-slate-600">
+                      <div className="max-w-[220px] leading-5">
+                        {item.requester}
+                      </div>
+                    </td>
 
-                      <td className="py-4 pr-4 text-slate-600">
-                        <div className="max-w-[220px] leading-5">
-                          {item.requester}
-                        </div>
-                      </td>
+                    <td className="py-4 pr-4 text-slate-600 whitespace-nowrap">
+                      {item.document}
+                    </td>
 
-                      <td className="py-4 pr-4 text-slate-600 whitespace-nowrap">
-                        {item.document}
-                      </td>
+                    <td className="py-4 pr-4 text-slate-600">
+                      <div className="max-w-[190px] leading-5">
+                        {item.request_type}
+                      </div>
+                    </td>
 
-                      <td className="py-4 pr-4 text-slate-600">
-                        <div className="max-w-[190px] leading-5">
-                          {item.requestType}
-                        </div>
-                      </td>
+                    <td className="py-4 pr-4 text-slate-600">
+                      <div className="max-w-[220px] leading-5">
+                        {item.address}
+                      </div>
+                    </td>
 
-                      <td className="py-4 pr-4 text-slate-600">
-                        <div className="max-w-[220px] leading-5">
-                          {item.address}
-                        </div>
-                      </td>
+                    <td className="py-4 pr-4 whitespace-nowrap">
+                      <StatusBadge status={item.status} />
+                    </td>
 
-                      <td className="py-4 pr-4 whitespace-nowrap">
-                        <StatusBadge status={item.status} />
-                      </td>
+                    <td className="py-4 pr-4 text-slate-600 whitespace-nowrap">
+                      {format(new Date(item.updated_at), "dd/MM/yyyy", {
+                        locale: ptBR,
+                      })}
+                    </td>
 
-                      <td className="py-4 pr-4 text-slate-600 whitespace-nowrap">
-                        {format(new Date(item.updatedAt), "dd/MM/yyyy", {
-                          locale: ptBR,
-                        })}
-                      </td>
+                    <td className="py-4 text-right">
+                      <Link to={`/analises/${item.id}`}>
+                        <Button variant="outline" size="sm" className="gap-1">
+                          Visualizar
+                        </Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
 
-                      <td className="py-4 text-right">
-                        <Link to={`/analises/${item.id}`}>
-                          <Button variant="outline" size="sm" className="gap-1">
-                            {canEdit ? "Abrir análise" : "Visualizar"}
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-
-                {recentAnalyses.length === 0 && (
+                {recentAnalyses.length === 0 && !loading && (
                   <tr>
                     <td
                       colSpan={8}
@@ -297,25 +322,25 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MiniStatCard
           title="Pendência documental"
-          value={pendingSummary.documental}
+          value={stats.docPending}
           icon={FileWarning}
           color="bg-amber-50 text-amber-600"
         />
         <MiniStatCard
           title="Pendência técnica"
-          value={pendingSummary.tecnica}
+          value={stats.techPending}
           icon={AlertCircle}
           color="bg-orange-50 text-orange-600"
         />
         <MiniStatCard
           title="Aguardando alvará"
-          value={pendingSummary.aguardandoAlvara}
+          value={stats.approved}
           icon={FileBadge}
           color="bg-indigo-50 text-indigo-600"
         />
         <MiniStatCard
           title="Sem mov. há 15+ dias"
-          value={pendingSummary.semMovimentacao}
+          value={stats.semMovimentacao}
           icon={FileClock}
           color="bg-slate-100 text-slate-700"
         />
