@@ -6,8 +6,8 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading, profile, profileLoaded } = useAuth();
   const location = useLocation();
 
-  // Se não estiver autenticado, vai para o login imediatamente (mesmo se loading for true)
-  // Isso resolve o travamento no logout
+  // Se não estiver autenticado, redireciona imediatamente para o login.
+  // Isso evita ficar preso no spinner de "Autenticando..." após o logout.
   if (!loading && !isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -24,7 +24,7 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Se não estiver autenticado após o loading, vai para o login
+  // Verificação dupla de segurança após o loading
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -46,7 +46,7 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Validação de status
+  // Validação de status do perfil
   if (profile.status === "pendente") {
     return <Navigate to="/aguardando-aprovacao" replace />;
   }

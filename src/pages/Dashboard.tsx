@@ -105,6 +105,8 @@ const Dashboard = () => {
       setAnalyses(data || []);
     } catch (error) {
       console.error("Erro ao buscar dados do dashboard:", error);
+      // Em caso de erro, mantemos a lista vazia mas finalizamos o loading
+      setAnalyses([]);
     } finally {
       setLoading(false);
     }
@@ -166,7 +168,7 @@ const Dashboard = () => {
 
   const recentAnalyses = analyses.slice(0, 8);
 
-  if (loading && analyses.length === 0) {
+  if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />

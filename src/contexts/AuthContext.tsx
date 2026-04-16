@@ -41,28 +41,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
-      
-      setProfile(null);
-      setProfileLoaded(true);
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
+    } finally {
       setProfile(null);
       setProfileLoaded(true);
     }
   };
 
   const signOut = async () => {
-    // Não definimos loading como true aqui para evitar o bloqueio da UI durante o logout
     try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Erro ao encerrar sessão:", error);
-    } finally {
-      // Limpamos os estados imediatamente para forçar o redirecionamento na PrivateRoute
+      // Limpamos os estados locais primeiro para uma resposta visual imediata
       setProfile(null);
       setIsAuthenticated(false);
       setProfileLoaded(true);
       setLoading(false);
+      
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Erro ao encerrar sessão:", error);
     }
   };
 
