@@ -22,6 +22,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import supabase from "@/lib/supabase";
 import { AnalysisStatus } from "@/types";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 
 const SummaryCard = ({
   title,
@@ -82,36 +83,60 @@ const Dashboard = () => {
   const [view, setView] = useState<"me" | "all">("all");
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMounted = useIsMounted();
 
   const fetchDashboardData = useCallback(async () => {
-    if (!isAuthenticated || !profile?.id) {
-      setLoading(false);
+    // Se o componente não estiver montado, não faz nada
+    if (!isMounted) return;
+
+    setLoading(true);
+
+    // Se não estiver autenticado, não podemos buscar dados
+    if (!isAuthenticated) {
+      if (isMounted) setLoading(false);
       return;
     }
     
-    setLoading(true);
     try {
+      // Se o filtro for "me" mas o profile ainda não carregou, evitamos a query
+      if (view === "me" && !profile?.id) {
+        if (isMounted) {
+          setAnalyses([]);
+          setLoading(false);
+        }
+        return;
+      }
+
       let query = supabase
         .from("analyses")
         .select("*")
         .order("updated_at", { ascending: false })
         .limit(8);
 
-      if (view === "me") {
+      // Aplica o filtro apenas se a visão for "me"
+      if (view === "me" && profile?.id) {
         query = query.eq("assigned_analyst_id", profile.id);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
-      setAnalyses(data || []);
+      
+      if (isMounted) {
+        setAnalyses(data || []);
+      }
     } catch (error) {
       console.error("Erro ao buscar dados do dashboard:", error);
-      setAnalyses([]);
+      if (isMounted) {
+        setAnalyses([]);
+      }
     } finally {
-      setLoading(false);
+      // Sempre finaliza o loading se o componente ainda estiver montado
+      if (isMounted) {
+        setLoading(false);
+      }
     }
-  }, [view, profile?.id, isAuthenticated]);
+  }, [view, profile?.id, isAuthenticated, isMounted]);
 
   useEffect(() => {
     fetchDashboardData();
