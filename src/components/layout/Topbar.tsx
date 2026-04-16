@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, User as UserIcon, Settings, LogOut, UserCircle } from "lucide-react";
+import { Search, User as UserIcon, Settings, LogOut, UserCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 interface TopbarProps {
   title: string;
@@ -66,13 +67,7 @@ export const Topbar = ({ title, subtitle }: TopbarProps) => {
         </div>
 
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            className="relative rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-50"
-          >
-            <Bell size={20} />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
-          </button>
+          <NotificationDropdown />
 
           <div className="mx-1 h-8 w-px bg-slate-200" />
 
