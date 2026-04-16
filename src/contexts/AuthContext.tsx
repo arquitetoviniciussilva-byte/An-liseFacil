@@ -30,7 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         .single();
 
       if (error || !data) {
-        console.warn("Perfil não encontrado ou erro na busca:", error?.message);
         setProfile(null);
       } else {
         setProfile(data as UserProfile);
@@ -44,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signOut = async () => {
+    setLoading(true);
     try {
       await supabase.auth.signOut();
     } finally {
@@ -72,8 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (session?.user) {
           setIsAuthenticated(true);
-          // Buscamos o perfil mas já liberamos o loading da sessão
-          fetchProfile(session.user.id);
+          // Aguarda o perfil ser carregado antes de liberar o loading inicial
+          await fetchProfile(session.user.id);
         } else {
           setIsAuthenticated(false);
           setProfile(null);
@@ -93,10 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setIsAuthenticated(true);
-        setLoading(false); // Libera o redirecionamento do login imediatamente
         if (session?.user) {
-          fetchProfile(session.user.id);
+          await fetchProfile(session.user.id);
         }
+        setLoading(false);
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setProfile(null);
