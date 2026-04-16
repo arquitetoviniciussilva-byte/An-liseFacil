@@ -30,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         .single();
 
       if (error || !data) {
+        console.warn("Perfil não encontrado ou erro na busca:", error?.message);
         setProfile(null);
       } else {
         setProfile(data as UserProfile);
@@ -71,7 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (session?.user) {
           setIsAuthenticated(true);
-          await fetchProfile(session.user.id);
+          // Buscamos o perfil mas já liberamos o loading da sessão
+          fetchProfile(session.user.id);
         } else {
           setIsAuthenticated(false);
           setProfile(null);
@@ -91,10 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setIsAuthenticated(true);
+        setLoading(false); // Libera o redirecionamento do login imediatamente
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          fetchProfile(session.user.id);
         }
-        setLoading(false);
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setProfile(null);
