@@ -18,7 +18,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { isAdmin } from "@/lib/permissions";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import supabase from "@/lib/supabase";
@@ -34,7 +33,7 @@ const SummaryCard = ({
   icon: any;
   color: string;
 }) => (
-  <Card className="overflow-hidden border-none shadow-sm">
+  <Card className="overflow-hidden border-none shadow-sm transition-all hover:shadow-md">
     <CardContent className="p-6">
       <div className="flex items-center justify-between">
         <div>
@@ -43,7 +42,7 @@ const SummaryCard = ({
             {value}
           </h3>
         </div>
-        <div className={cn("rounded-xl p-3", color)}>
+        <div className={cn("rounded-2xl p-3.5", color)}>
           <Icon size={24} />
         </div>
       </div>
@@ -62,16 +61,16 @@ const MiniStatCard = ({
   icon: any;
   color: string;
 }) => (
-  <Card className="border-none shadow-sm">
+  <Card className="border-none shadow-sm transition-all hover:bg-slate-50/50">
     <CardContent className="flex items-center justify-between p-5">
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
           {title}
         </p>
-        <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
       </div>
-      <div className={cn("rounded-xl p-3", color)}>
-        <Icon size={20} />
+      <div className={cn("rounded-xl p-2.5", color)}>
+        <Icon size={18} />
       </div>
     </CardContent>
   </Card>
@@ -174,80 +173,85 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <Button
-          asChild
-          className="h-11 gap-2 bg-indigo-600 px-5 text-white hover:bg-indigo-700"
-        >
-          <Link to="/analises/nova">
-            <Plus size={16} />
-            Nova Análise
-          </Link>
-        </Button>
-
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+    <div className="space-y-8">
+      {/* Header com alinhamento refinado */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm w-fit">
           <Button
-            variant={view === "me" ? "default" : "outline"}
+            variant="ghost"
+            size="sm"
             onClick={() => setView("me")}
             className={cn(
-              "h-11 px-5",
-              view === "me" && "bg-slate-900 text-white hover:bg-slate-800"
+              "h-9 px-4 text-xs font-semibold transition-all",
+              view === "me" 
+                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm" 
+                : "text-slate-500 hover:text-slate-900"
             )}
           >
             Meus processos
           </Button>
-
           <Button
-            variant={view === "all" ? "default" : "outline"}
+            variant="ghost"
+            size="sm"
             onClick={() => setView("all")}
             className={cn(
-              "h-11 px-5",
-              view === "all" && "bg-slate-900 text-white hover:bg-slate-800"
+              "h-9 px-4 text-xs font-semibold transition-all",
+              view === "all" 
+                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm" 
+                : "text-slate-500 hover:text-slate-900"
             )}
           >
             Todos os processos
           </Button>
         </div>
+
+        <Button
+          asChild
+          className="h-11 gap-2 bg-indigo-600 px-6 text-sm font-bold text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all hover:-translate-y-0.5 active:translate-y-0"
+        >
+          <Link to="/analises/nova">
+            <Plus size={18} strokeWidth={3} />
+            Nova Análise
+          </Link>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* Grid de Cards Principais */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {cardsData.map((card) => (
           <SummaryCard key={card.title} {...card} />
         ))}
       </div>
 
-      <Card className="border-none shadow-sm">
-        <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-base font-semibold">
+      {/* Tabela de Análises Recentes */}
+      <Card className="border-none shadow-sm overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 bg-white px-6 py-5">
+          <CardTitle className="text-base font-bold text-slate-800">
             Análises Recentes
           </CardTitle>
-
           <Link to="/analises">
             <Button
-              variant="link"
-              className="h-auto p-0 text-indigo-600 hover:underline"
+              variant="ghost"
+              size="sm"
+              className="text-xs font-bold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
             >
-              <span className="flex items-center gap-1">
-                Ver todas <ArrowUpRight size={14} />
-              </span>
+              Ver todas <ArrowUpRight size={14} className="ml-1" />
             </Button>
           </Link>
         </CardHeader>
 
-        <CardContent className="pt-2">
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-slate-400">
-                  <th className="pb-3 pr-4 font-medium">Processo</th>
-                  <th className="pb-3 pr-4 font-medium">Requerente</th>
-                  <th className="pb-3 pr-4 font-medium">Documento</th>
-                  <th className="pb-3 pr-4 font-medium">Categoria</th>
-                  <th className="pb-3 pr-4 font-medium">Endereço</th>
-                  <th className="pb-3 pr-4 font-medium">Status</th>
-                  <th className="pb-3 pr-4 font-medium">Última Mov.</th>
-                  <th className="pb-3 text-right font-medium">Ação</th>
+                <tr className="bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-6 py-4">Processo</th>
+                  <th className="px-6 py-4">Requerente / Documento</th>
+                  <th className="px-6 py-4">Categoria</th>
+                  <th className="px-6 py-4">Endereço</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Última Mov.</th>
+                  <th className="px-6 py-4 text-right">Ação</th>
                 </tr>
               </thead>
 
@@ -255,48 +259,41 @@ const Dashboard = () => {
                 {recentAnalyses.map((item) => (
                   <tr
                     key={item.id}
-                    className="group transition-colors hover:bg-slate-50/50"
+                    className="group transition-colors hover:bg-slate-50/30"
                   >
-                    <td className="py-4 pr-4 font-medium text-slate-900 whitespace-nowrap">
+                    <td className="px-6 py-4 font-bold text-slate-900">
                       {item.process_number}
                     </td>
 
-                    <td className="py-4 pr-4 text-slate-600">
-                      <div className="max-w-[220px] leading-5">
-                        {item.requester}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-700 line-clamp-1">{item.requester}</span>
+                        <span className="text-[11px] text-slate-400">{item.document}</span>
                       </div>
                     </td>
 
-                    <td className="py-4 pr-4 text-slate-600 whitespace-nowrap">
-                      {item.document}
+                    <td className="px-6 py-4 text-slate-600">
+                      <span className="line-clamp-1">{item.request_type}</span>
                     </td>
 
-                    <td className="py-4 pr-4 text-slate-600">
-                      <div className="max-w-[190px] leading-5">
-                        {item.request_type}
-                      </div>
+                    <td className="px-6 py-4 text-slate-500">
+                      <span className="line-clamp-1 text-xs">{item.address}</span>
                     </td>
 
-                    <td className="py-4 pr-4 text-slate-600">
-                      <div className="max-w-[220px] leading-5">
-                        {item.address}
-                      </div>
-                    </td>
-
-                    <td className="py-4 pr-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <StatusBadge status={item.status} />
                     </td>
 
-                    <td className="py-4 pr-4 text-slate-600 whitespace-nowrap">
-                      {format(new Date(item.updated_at), "dd/MM/yyyy", {
+                    <td className="px-6 py-4 text-slate-500 font-medium">
+                      {format(new Date(item.updated_at), "dd MMM yyyy", {
                         locale: ptBR,
                       })}
                     </td>
 
-                    <td className="py-4 text-right">
+                    <td className="px-6 py-4 text-right">
                       <Link to={`/analises/${item.id}`}>
-                        <Button variant="outline" size="sm" className="gap-1">
-                          Visualizar
+                        <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-indigo-600 transition-all">
+                          Detalhes
                         </Button>
                       </Link>
                     </td>
@@ -306,10 +303,10 @@ const Dashboard = () => {
                 {recentAnalyses.length === 0 && !loading && (
                   <tr>
                     <td
-                      colSpan={8}
-                      className="py-8 text-center text-slate-500"
+                      colSpan={7}
+                      className="py-12 text-center text-slate-400 italic"
                     >
-                      Nenhuma análise encontrada para este filtro.
+                      Nenhum registro encontrado.
                     </td>
                   </tr>
                 )}
@@ -319,6 +316,7 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Bloco Inferior de Pendências */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MiniStatCard
           title="Pendência documental"
@@ -342,7 +340,7 @@ const Dashboard = () => {
           title="Sem mov. há 15+ dias"
           value={stats.semMovimentacao}
           icon={FileClock}
-          color="bg-slate-100 text-slate-700"
+          color="bg-slate-100 text-slate-500"
         />
       </div>
     </div>
