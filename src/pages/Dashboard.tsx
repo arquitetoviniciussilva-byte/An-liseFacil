@@ -83,7 +83,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = useCallback(async () => {
-    // Se não estiver autenticado ou não houver ID de perfil, não executa a query
     if (!isAuthenticated || !profile?.id) {
       setLoading(false);
       return;
@@ -91,14 +90,13 @@ const Dashboard = () => {
     
     setLoading(true);
     try {
-      // Ajustada a query para evitar erro PGRST200 usando join direto pela coluna
+      // Query simplificada: removemos o join que causava PGRST200
+      // Buscamos apenas os dados da tabela analyses
       let query = supabase
         .from("analyses")
-        .select(`
-          *,
-          analyst:assigned_analyst_id(nome)
-        `)
-        .order("updated_at", { ascending: false });
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .limit(8); // Limitamos a 8 registros conforme solicitado
 
       if (view === "me") {
         query = query.eq("assigned_analyst_id", profile.id);
@@ -121,6 +119,7 @@ const Dashboard = () => {
   }, [fetchDashboardData]);
 
   const stats = useMemo(() => {
+    // Nota: Como a query agora é limitada a 8, as estatísticas refletirão apenas esses 8 registros.
     const inProgress = analyses.filter(a => a.status === 'em_andamento').length;
     const docPending = analyses.filter(a => a.status === 'pendencia_documental').length;
     const techPending = analyses.filter(a => a.status === 'pendencia_tecnica').length;
@@ -169,8 +168,6 @@ const Dashboard = () => {
       color: "bg-indigo-50 text-indigo-600",
     },
   ];
-
-  const recentAnalyses = analyses.slice(0, 8);
 
   if (loading) {
     return (
@@ -262,7 +259,7 @@ const Dashboard = () => {
               </thead>
 
               <tbody className="divide-y divide-slate-50">
-                {recentAnalyses.map((item) => (
+                {analyses.map((item) => (
                   <tr
                     key={item.id}
                     className="group transition-colors hover:bg-slate-50/30"
@@ -307,7 +304,7 @@ const Dashboard = () => {
                   </tr>
                 ))}
 
-                {recentAnalyses.length === 0 && !loading && (
+                {analyses.length === 0 && !loading && (
                   <tr>
                     <td
                       colSpan={8}
