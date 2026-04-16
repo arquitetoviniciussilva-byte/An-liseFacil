@@ -22,24 +22,29 @@ const WaitingApproval = () => {
             className="w-24 h-24 object-contain"
           />
         </div>
+        
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Solicitação em Análise</h1>
         <p className="text-slate-600 mb-8">
-          Olá, <span className="font-semibold">{profile?.nome}</span>. Sua solicitação de acesso foi recebida e está aguardando aprovação de um administrador.
+          Olá, <span className="font-semibold">{profile?.nome || "Usuário"}</span>. Sua solicitação de acesso foi recebida e está aguardando a liberação de um administrador.
         </p>
+
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 text-left">
           <div className="flex gap-3 items-start">
             <Clock className="text-amber-500 shrink-0 mt-0.5" size={18} />
             <p className="text-sm text-slate-500">
-              Seu acesso ao sistema será liberado após aprovação do administrador. Até lá, esta conta permanecerá sem acesso às áreas internas.
+              Seu acesso ao sistema será liberado manualmente pela equipe de administração. Assim que aprovado, você poderá acessar todas as funcionalidades da plataforma.
             </p>
           </div>
         </div>
+
         <Button
           variant="outline"
-          className="gap-2"
+          className="gap-2 h-11 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
           onClick={async () => {
             await signOut();
-            if (isMounted) navigate("/login");
+            if (isMounted) {
+              navigate("/login", { replace: true });
+            }
           }}
         >
           <LogOut size={16} />
