@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -21,25 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import supabase from "@/lib/supabase";
-
-type AnalysisRow = {
-  id: string;
-  process_number: string;
-  protocol_number: string;
-  requester: string;
-  technical_responsible: string;
-  document: string;
-  request_type: string;
-  address: string;
-  real_estate_id: string;
-  zoning: string;
-  status: string;
-  observations?: string | null;
-  assigned_analyst_id?: string | null;
-  created_by?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-};
+import { AnalysisStatus } from "@/types";
 
 const SummaryCard = ({
   title,
@@ -98,100 +80,53 @@ const MiniStatCard = ({
 const Dashboard = () => {
   const { profile, isAuthenticated } = useAuth();
   const [view, setView] = useState<"me" | "all">("all");
-  const [analyses, setAnalyses] = useState<AnalysisRow[]>([]);
+  const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchDashboardData = useCallback(async () => {
+    if (!isAuthenticated || !profile?.id) {
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("analyses")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .limit(8);
+
+      if (view === "me") {
+        query = query.eq("assigned_analyst_id", profile.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setAnalyses(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar dados do dashboard:", error);
+      setAnalyses([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [view, profile?.id, isAuthenticated]);
+
   useEffect(() => {
-    let active = true;
-
-    const fetchDashboardData = async () => {
-      if (!isAuthenticated || !profile?.id) {
-        if (active) {
-          setAnalyses([]);
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        if (active) setLoading(true);
-
-        let query = supabase
-          .from("analyses")
-          .select("*")
-          .order("updated_at", { ascending: false })
-          .limit(8);
-
-        if (view === "me") {
-          query = query.eq("assigned_analyst_id", profile.id);
-        }
-
-        const { data, error } = await query;
-
-        if (!active) return;
-
-        if (error) {
-          console.error("Erro ao buscar dados do dashboard:", error);
-          setAnalyses([]);
-          return;
-        }
-
-        setAnalyses((data || []) as AnalysisRow[]);
-      } catch (error) {
-        if (!active) return;
-        console.error("Erro ao buscar dados do dashboard:", error);
-        setAnalyses([]);
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
     fetchDashboardData();
-
-    return () => {
-      active = false;
-    };
-  }, [isAuthenticated, profile?.id, view]);
+  }, [fetchDashboardData]);
 
   const stats = useMemo(() => {
-    const inProgress = analyses.filter(
-      (a) =>
-        a.status === "em_andamento" ||
-        a.status === "Em Andamento" ||
-        a.status === "em andamento"
-    ).length;
-
-    const docPending = analyses.filter(
-      (a) =>
-        a.status === "pendencia_documental" ||
-        a.status === "Pendência Documental" ||
-        a.status === "pendencia documental"
-    ).length;
-
-    const techPending = analyses.filter(
-      (a) =>
-        a.status === "pendencia_tecnica" ||
-        a.status === "Pendência Técnica" ||
-        a.status === "pendencia tecnica"
-    ).length;
-
-    const approved = analyses.filter(
-      (a) =>
-        a.status === "aprovado" ||
-        a.status === "Aprovado"
-    ).length;
-
-    const permitsIssued = analyses.filter(
-      (a) =>
-        a.status === "alvara_emitido" ||
-        a.status === "Alvará Emitido" ||
-        a.status === "alvara emitido"
-    ).length;
-
-    const semMovimentacao = analyses.filter((a) => {
-      if (!a.updated_at) return false;
+    const inProgress = analyses.filter(a => a.status === 'em_andamento').length;
+    const docPending = analyses.filter(a => a.status === 'pendencia_documental').length;
+    const techPending = analyses.filter(a => a.status === 'pendencia_tecnica').length;
+    const approved = analyses.filter(a => a.status === 'aprovado').length;
+    const permitsIssued = analyses.filter(a => a.status === 'alvara_emitido').length;
+    
+    const semMovimentacao = analyses.filter(a => {
       const diff = Date.now() - new Date(a.updated_at).getTime();
-      return diff > 15 * 24 * 60 * 60 * 1000;
+      return diff > (15 * 24 * 60 * 60 * 1000);
     }).length;
 
     return {
@@ -201,7 +136,7 @@ const Dashboard = () => {
       permitsIssued,
       docPending,
       techPending,
-      semMovimentacao,
+      semMovimentacao
     };
   }, [analyses]);
 
@@ -243,15 +178,15 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm w-fit">
+        <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm w-fit">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setView("me")}
             className={cn(
               "h-9 px-4 text-xs font-semibold transition-all",
-              view === "me"
-                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
+              view === "me" 
+                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm" 
                 : "text-slate-500 hover:text-slate-900"
             )}
           >
@@ -263,8 +198,8 @@ const Dashboard = () => {
             onClick={() => setView("all")}
             className={cn(
               "h-9 px-4 text-xs font-semibold transition-all",
-              view === "all"
-                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
+              view === "all" 
+                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-sm" 
                 : "text-slate-500 hover:text-slate-900"
             )}
           >
@@ -274,49 +209,50 @@ const Dashboard = () => {
 
         <Button
           asChild
-          className="h-10 gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+          className="h-11 gap-2 bg-indigo-600 px-6 text-sm font-bold text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all hover:-translate-y-0.5 active:translate-y-0"
         >
           <Link to="/analises/nova">
-            <Plus size={16} />
+            <Plus size={18} strokeWidth={3} />
             Nova Análise
           </Link>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {cardsData.map((card) => (
           <SummaryCard key={card.title} {...card} />
         ))}
       </div>
 
-      <Card className="border-none shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base font-semibold">
+      <Card className="border-none shadow-sm overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 bg-white px-6 py-5">
+          <CardTitle className="text-base font-bold text-slate-800">
             Análises Recentes
           </CardTitle>
           <Link to="/analises">
             <Button
-              variant="link"
-              className="flex items-center gap-1 p-0 text-indigo-600 hover:underline"
+              variant="ghost"
+              size="sm"
+              className="text-xs font-bold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
             >
-              Ver todas <ArrowUpRight size={14} />
+              Ver todas <ArrowUpRight size={14} className="ml-1" />
             </Button>
           </Link>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-slate-400">
-                  <th className="pb-3 font-medium">Processo</th>
-                  <th className="pb-3 font-medium">Requerente</th>
-                  <th className="pb-3 font-medium">CNPJ</th>
-                  <th className="pb-3 font-medium">Categoria</th>
-                  <th className="pb-3 font-medium">Obra</th>
-                  <th className="pb-3 font-medium">Status</th>
-                  <th className="pb-3 font-medium">Última Mov.</th>
-                  <th className="pb-3 text-right font-medium">Ação</th>
+                <tr className="bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-6 py-4">Processo</th>
+                  <th className="px-6 py-4">Requerente</th>
+                  <th className="px-6 py-4">CNPJ / CPF</th>
+                  <th className="px-6 py-4">Categoria</th>
+                  <th className="px-6 py-4">Obra (Endereço)</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Última Mov.</th>
+                  <th className="px-6 py-4 text-right">Ação</th>
                 </tr>
               </thead>
 
@@ -324,32 +260,41 @@ const Dashboard = () => {
                 {analyses.map((item) => (
                   <tr
                     key={item.id}
-                    className="transition-colors hover:bg-slate-50/50"
+                    className="group transition-colors hover:bg-slate-50/30"
                   >
-                    <td className="py-4 font-medium text-slate-900">
+                    <td className="px-6 py-4 font-bold text-slate-900">
                       {item.process_number}
                     </td>
-                    <td className="py-4 text-slate-600">{item.requester}</td>
-                    <td className="py-4 text-slate-600">{item.document}</td>
-                    <td className="py-4 text-slate-600">{item.request_type}</td>
-                    <td className="py-4 text-slate-600">{item.address}</td>
-                    <td className="py-4">
-                      <StatusBadge status={item.status} />
+
+                    <td className="px-6 py-4 font-semibold text-slate-700">
+                      <span className="line-clamp-1">{item.requester}</span>
                     </td>
-                    <td className="py-4 text-slate-600">
-                      {item.updated_at
-                        ? format(new Date(item.updated_at), "dd/MM/yyyy", {
-                            locale: ptBR,
-                          })
-                        : "-"}
+
+                    <td className="px-6 py-4 text-slate-500 font-medium">
+                      {item.document}
                     </td>
-                    <td className="py-4 text-right">
+
+                    <td className="px-6 py-4 text-slate-600">
+                      <span className="line-clamp-1">{item.request_type}</span>
+                    </td>
+
+                    <td className="px-6 py-4 text-slate-500">
+                      <span className="line-clamp-1 text-xs">{item.address}</span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <StatusBadge status={item.status as AnalysisStatus} />
+                    </td>
+
+                    <td className="px-6 py-4 text-slate-500 font-medium">
+                      {format(new Date(item.updated_at), "dd MMM yyyy", {
+                        locale: ptBR,
+                      })}
+                    </td>
+
+                    <td className="px-6 py-4 text-right">
                       <Link to={`/analises/${item.id}`}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-3 text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-indigo-600 transition-all"
-                        >
+                        <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-indigo-600 transition-all">
                           Detalhes
                         </Button>
                       </Link>
@@ -357,7 +302,7 @@ const Dashboard = () => {
                   </tr>
                 ))}
 
-                {analyses.length === 0 && (
+                {analyses.length === 0 && !loading && (
                   <tr>
                     <td
                       colSpan={8}
