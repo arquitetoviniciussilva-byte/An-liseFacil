@@ -21,20 +21,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, retries = 3) => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle(); // maybeSingle evita erro se o registro ainda não existir
+      for (let i = 0; i < retries; i++) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle();
 
-      if (error) throw error;
-      setProfile(data as UserProfile || null);
+        if (data) {
+          setProfile(data as UserProfile);
+          setProfileLoaded(true);
+          return;
+        }
+
+        if (i < retries - 1) {
+          // Aguarda 1 segundo antes de tentar novamente (esperando o trigger do banco)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      setProfile(null);
+      setProfileLoaded(true);
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
       setProfile(null);
-    } finally {
       setProfileLoaded(true);
     }
   };
@@ -43,10 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
     try {
       await supabase.auth.signOut();
-    } finally {
       setProfile(null);
       setIsAuthenticated(false);
       setProfileLoaded(true);
+    } finally {
       setLoading(false);
     }
   };
@@ -93,10 +105,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (session?.user) {
           await fetchProfile(session.user.id);
         }
+        setLoading(false);
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setProfile(null);
         setProfileLoaded(true);
+        setLoading(false);
       }
     });
 

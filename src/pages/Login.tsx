@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, profileLoaded } = useAuth();
 
   const [loadingBtn, setLoadingBtn] = useState(false);
   const [email, setEmail] = useState("");
@@ -18,29 +18,33 @@ const Login = () => {
   const logoUrl = "dyad-media://media/An%C3%A1liseF%C3%A1cil/.dyad/media/59a59dd7a0368dd81e5d625bba7fca6c.png";
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (!loading && isAuthenticated && profileLoaded) {
       const from = (location.state as any)?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, loading, navigate, location]);
+  }, [isAuthenticated, loading, profileLoaded, navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoadingBtn(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      showError(
-        error.message === "Invalid login credentials"
-          ? "E‑mail ou senha incorretos"
-          : error.message,
-      );
-      setLoadingBtn(false);
-    } else {
+      if (error) {
+        showError(
+          error.message === "Invalid login credentials"
+            ? "E‑mail ou senha incorretos"
+            : error.message,
+        );
+        setLoadingBtn(false);
+      }
+      // O redirecionamento é tratado pelo useEffect via AuthContext
+    } catch (err) {
+      showError("Ocorreu um erro inesperado.");
       setLoadingBtn(false);
     }
   };

@@ -6,7 +6,7 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading, profile, profileLoaded } = useAuth();
   const location = useLocation();
 
-  // Enquanto estiver carregando a sessão inicial, mostra o spinner
+  // Se ainda estiver carregando a sessão inicial, mostra o spinner
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -23,7 +23,7 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Se autenticado mas o perfil ainda não carregou (ex: delay no trigger), aguarda um pouco mais
+  // Se autenticado mas o perfil ainda não carregou, aguarda
   if (!profileLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -35,7 +35,7 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Se o perfil carregou mas é nulo (erro grave ou usuário deletado do banco de perfis)
+  // Se o perfil não existe (erro no trigger ou deletado), volta ao login
   if (!profile) {
     return <Navigate to="/login" replace />;
   }
@@ -49,6 +49,5 @@ export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Acesso liberado (status ativo)
   return <>{children}</>;
 };
