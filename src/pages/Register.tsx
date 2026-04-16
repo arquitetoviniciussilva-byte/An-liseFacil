@@ -20,6 +20,8 @@ const Register = () => {
     confirm: "",
   });
 
+  const logoUrl = "dyad-media://media/An%C3%A1liseF%C3%A1cil/.dyad/media/59a59dd7a0368dd81e5d625bba7fca6c.png";
+
   useEffect(() => {
     if (!loading && isAuthenticated) {
       const from = (location.state as any)?.from?.pathname || "/dashboard";
@@ -68,8 +70,12 @@ const Register = () => {
         </Link>
 
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl text-white mb-4 shadow-lg shadow-indigo-200">
-            <ArrowLeft size={32} />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src={logoUrl} 
+              alt="Análise Fácil Logo" 
+              className="w-20 h-20 object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Solicitar Acesso</h1>
           <p className="text-slate-500 mt-2">Preencha os dados para análise da sua conta</p>

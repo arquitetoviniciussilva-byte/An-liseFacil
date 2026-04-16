@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { showError } from "@/utils/toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const Login = () => {
@@ -15,6 +14,8 @@ const Login = () => {
   const [loadingBtn, setLoadingBtn] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const logoUrl = "dyad-media://media/An%C3%A1liseF%C3%A1cil/.dyad/media/59a59dd7a0368dd81e5d625bba7fca6c.png";
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
@@ -40,8 +41,6 @@ const Login = () => {
       );
       setLoadingBtn(false);
     } else {
-      // session change handled by AuthContext
-      // Reset loading button state as backup
       setLoadingBtn(false);
     }
   };
@@ -50,8 +49,12 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl text-white mb-4 shadow-lg shadow-indigo-200">
-            <ArrowLeft size={32} />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src={logoUrl} 
+              alt="Análise Fácil Logo" 
+              className="w-24 h-24 object-contain drop-shadow-sm"
+            />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Bem‑vindo de volta</h1>
           <p className="text-slate-500 mt-2">Acesse sua conta para gerenciar as análises</p>

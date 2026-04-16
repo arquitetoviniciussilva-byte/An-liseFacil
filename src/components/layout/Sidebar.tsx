@@ -7,7 +7,6 @@ import {
   FileBadge,
   Settings,
   LogOut,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export const Sidebar = () => {
   const { profile, signOut } = useAuth();
+  const logoUrl = "dyad-media://media/An%C3%A1liseF%C3%A1cil/.dyad/media/59a59dd7a0368dd81e5d625bba7fca6c.png";
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -29,11 +29,15 @@ export const Sidebar = () => {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
       <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
-          <ShieldCheck size={24} />
+        <div className="w-10 h-10 flex items-center justify-center">
+          <img 
+            src={logoUrl} 
+            alt="Logo" 
+            className="w-full h-full object-contain"
+          />
         </div>
         <div>
-          <h1 className="font-bold text-slate-900 leading-tight">PRO-ANÁLISE</h1>
+          <h1 className="font-bold text-slate-900 leading-tight tracking-tight">ANÁLISE FÁCIL</h1>
           <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Sistema Interno</p>
         </div>
       </div>
